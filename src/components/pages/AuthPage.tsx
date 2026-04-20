@@ -56,9 +56,8 @@ export default function AuthPage() {
             src="/logo.png"
             alt="Adventurer"
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.svg'; }}
-            className="mx-auto mb-3 w-28 h-28 rounded-full shadow-lg"
+            className="mx-auto mb-3 w-36 h-36 object-contain drop-shadow-lg"
           />
-          <h1 className="text-2xl font-black text-[#1B4332]">Adventurer</h1>
           <p className="text-gray-500 text-sm mt-1">
             {mode === 'login'
               ? (isEn ? 'Welcome back!' : 'Content de te revoir !')

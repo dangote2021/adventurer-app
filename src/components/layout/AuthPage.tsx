@@ -122,7 +122,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="relative z-10 w-28 h-28 rounded-full overflow-hidden shadow-2xl shadow-green-900/40 ring-2 ring-white/10">
           <img
-            src="/logo.svg"
+            src="/logo-icon.svg"
             alt="Adventurer"
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -131,8 +131,11 @@ export default function AuthPage() {
           />
         </div>
 
+        {/* Wordmark */}
+        <h1 className="relative z-10 mt-5 text-3xl font-black tracking-[0.2em] text-white">ADVENTURER</h1>
+
         {/* Tagline */}
-        <p className="relative z-10 text-gray-400 mt-4 text-sm tracking-wide">{t('topbar.tagline', language)}</p>
+        <p className="relative z-10 text-gray-400 mt-2 text-sm tracking-wide">{t('topbar.tagline', language)}</p>
       </div>
 
       {/* Auth Form */}
