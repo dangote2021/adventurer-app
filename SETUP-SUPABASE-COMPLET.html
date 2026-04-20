@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Setup Supabase Complet — Adventurer</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; background: #0a0c10; color: #e0e0e0; }
+  h1 { color: #F77F00; font-size: 1.8rem; }
+  h2 { color: #7c3aed; margin-top: 2.5rem; }
+  .step { background: #1a1d23; border-radius: 12px; padding: 1.5rem; margin: 1rem 0; border: 1px solid #2a2d35; }
+  .step.done { border-color: #2D6A4F; }
+  button { background: #F77F00; color: white; border: 0; padding: 12px 24px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  button:hover { background: #d86800; transform: translateY(-1px); }
+  button.copied { background: #2D6A4F; }
+  button.small { padding: 8px 16px; font-size: 13px; }
+  a { color: #F77F00; font-weight: 600; }
+  a:hover { color: #d86800; }
+  .ok { color: #2D6A4F; font-weight: bold; }
+  .warn { color: #F77F00; }
+  code { background: #2a2d35; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2D6A4F; }
+  .progress { background: #2a2d35; border-radius: 8px; height: 8px; margin: 1rem 0; overflow: hidden; }
+  .progress-bar { background: linear-gradient(90deg, #2D6A4F, #F77F00); height: 100%; transition: width 0.5s; border-radius: 8px; }
+  textarea { width: 100%; height: 120px; font-family: monospace; font-size: 11px; border: 1px solid #2a2d35; border-radius: 8px; padding: 10px; background: #12141a; color: #a0a0a0; resize: vertical; }
+  .url-box { background: #12141a; border: 1px solid #2a2d35; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 13px; color: #7c3aed; display: flex; align-items: center; justify-content: space-between; margin: 8px 0; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+  .badge-required { background: #F77F00; color: white; }
+  .badge-optional { background: #2a2d35; color: #a0a0a0; }
+  ol li { margin: 8px 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>🧭 Setup Supabase — Adventurer</h1>
+<p>4 etapes pour brancher Supabase. Coche au fur et a mesure, tout est pret a copier-coller.</p>
+
+<div class="progress"><div class="progress-bar" id="progressBar" style="width: 0%"></div></div>
+<p id="progressText" style="text-align:center; color: #666; font-size: 13px;">0/4 etapes completees</p>
+
+<!-- ============================================================ -->
+<h2>Etape 1 — Schema SQL initial <span class="badge badge-required">REQUIS</span></h2>
+<!-- ============================================================ -->
+
+<div class="step" id="step1">
+  <p>Ce SQL cree les tables de base : <code>profiles</code>, <code>teams</code>, <code>messages</code>, <code>spots</code>, <code>market_items</code>, <code>events</code>, etc. + les politiques RLS + le trigger auto-creation de profil.</p>
+  <ol>
+    <li>Clique <button onclick="copySQL1()" id="btn1">📋 Copier le SQL initial</button></li>
+    <li>Va sur <a href="https://supabase.com/dashboard/project/avldyvgvouzpeprygvyw/sql/new" target="_blank">SQL Editor Supabase ↗</a></li>
+    <li>Colle avec <b>Ctrl+V</b> → clique <b>Run</b></li>
+    <li>Si tout est vert : <div class="checkbox-row"><input type="checkbox" id="check1" onchange="updateProgress()"><label for="check1">Schema initial applique</label></div></li>
+  </ol>
+  <details><summary style="cursor:pointer; color:#666; font-size:13px;">Voir le SQL (lecture seule)</summary><textarea id="sql1" readonly></textarea></details>
+</div>
+
+<!-- ============================================================ -->
+<h2>Etape 2 — Schema monetisation (migration v2) <span class="badge badge-required">REQUIS</span></h2>
+<!-- ============================================================ -->
+
+<div class="step" id="step2">
+  <p>Ce SQL ajoute : <code>coaches</code>, <code>coach_bookings</code>, <code>marketplace_orders</code>, <code>ambassadors</code>, <code>waitlist</code>, <code>newsletter</code>, etc.</p>
+  <p class="warn">⚠️ A executer APRES l'etape 1 (il reference <code>profiles</code> et <code>market_items</code>).</p>
+  <ol>
+    <li>Clique <button onclick="copySQL2()" id="btn2">📋 Copier le SQL monetisation</button></li>
+    <li>Retourne sur <a href="https://supabase.com/dashboard/project/avldyvgvouzpeprygvyw/sql/new" target="_blank">SQL Editor ↗</a> (nouvel onglet SQL)</li>
+    <li>Colle → <b>Run</b></li>
+    <li>Si tout est vert : <div class="checkbox-row"><input type="checkbox" id="check2" onchange="updateProgress()"><label for="check2">Schema monetisation applique</label></div></li>
+  </ol>
+  <details><summary style="cursor:pointer; color:#666; font-size:13px;">Voir le SQL (lecture seule)</summary><textarea id="sql2" readonly></textarea></details>
+</div>
+
+<!-- ============================================================ -->
+<h2>Etape 3 — Redirect URLs <span class="badge badge-required">REQUIS</span></h2>
+<!-- ============================================================ -->
+
+<div class="step" id="step3">
+  <p>Configure les URLs de redirection pour que l'auth (Google OAuth, email confirm) fonctionne.</p>
+  <ol>
+    <li>Va sur <a href="https://supabase.com/dashboard/project/avldyvgvouzpeprygvyw/auth/url-configuration" target="_blank">Authentication → URL Configuration ↗</a></li>
+    <li>Dans <b>"Site URL"</b>, mets :
+      <div class="url-box">https://adventurer-outdoor.vercel.app <button class="small" onclick="copyText('https://adventurer-outdoor.vercel.app', this)">Copier</button></div>
+    </li>
+    <li>Dans <b>"Redirect URLs"</b>, clique "Add URL" et ajoute ces 3 URLs :
+      <div class="url-box">https://adventurer-outdoor.vercel.app/auth/callback <button class="small" onclick="copyText('https://adventurer-outdoor.vercel.app/auth/callback', this)">Copier</button></div>
+      <div class="url-box">https://adventurer-outdoor.vercel.app <button class="small" onclick="copyText('https://adventurer-outdoor.vercel.app', this)">Copier</button></div>
+      <div class="url-box">http://localhost:3000/auth/callback <button class="small" onclick="copyText('http://localhost:3000/auth/callback', this)">Copier</button></div>
+    </li>
+    <li>Clique <b>Save</b></li>
+    <li><div class="checkbox-row"><input type="checkbox" id="check3" onchange="updateProgress()"><label for="check3">Redirect URLs configurees</label></div></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>Etape 4 — Google OAuth <span class="badge badge-optional">OPTIONNEL</span></h2>
+<!-- ============================================================ -->
+
+<div class="step" id="step4">
+  <p>Si tu veux activer "Continuer avec Google". Sans ca, le bouton utilisera le mode mock (fallback automatique).</p>
+  <ol>
+    <li>Va sur <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console → Credentials ↗</a></li>
+    <li>Cree un "OAuth 2.0 Client ID" (type: Web application)</li>
+    <li>Dans "Authorized redirect URIs", ajoute :
+      <div class="url-box">https://avldyvgvouzpeprygvyw.supabase.co/auth/v1/callback <button class="small" onclick="copyText('https://avldyvgvouzpeprygvyw.supabase.co/auth/v1/callback', this)">Copier</button></div>
+    </li>
+    <li>Copie le <b>Client ID</b> et le <b>Client Secret</b></li>
+    <li>Va sur <a href="https://supabase.com/dashboard/project/avldyvgvouzpeprygvyw/auth/providers" target="_blank">Supabase → Auth → Providers ↗</a></li>
+    <li>Active <b>Google</b>, colle le Client ID et le Client Secret, sauvegarde</li>
+    <li><div class="checkbox-row"><input type="checkbox" id="check4" onchange="updateProgress()"><label for="check4">Google OAuth configure (ou skip)</label></div></li>
+  </ol>
+</div>
+
+<div class="step" style="text-align:center; margin-top: 2rem; border-color: #F77F00;">
+  <h2 style="margin-top: 0; color: #F77F00;">🚀 Pret a deployer ?</h2>
+  <p>Une fois les etapes cochees, lance <code>deploy.bat</code> pour deployer sur Vercel.</p>
+  <p>L'inscription email et le login fonctionneront en reel via Supabase.</p>
+</div>
+
+<script>
+// ========== SQL CONTENT ==========
+
+const SQL1 = `-- ============================================================================
+-- ADVENTURER - Supabase Database Schema
+-- Run this in the Supabase SQL Editor to set up the database
+-- ============================================================================
+
+-- Enable extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
+-- USERS & PROFILES
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  avatar TEXT DEFAULT '🧑',
+  location TEXT,
+  bio TEXT,
+  level TEXT DEFAULT 'Débutant' CHECK (level IN ('Débutant', 'Confirmé', 'Expert')),
+  joined_date TIMESTAMPTZ DEFAULT NOW(),
+  is_online BOOLEAN DEFAULT FALSE,
+  last_seen TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_sports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  sport TEXT NOT NULL,
+  UNIQUE(user_id, sport)
+);
+
+CREATE TABLE IF NOT EXISTS user_stats (
+  user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  sorties INTEGER DEFAULT 0,
+  hours INTEGER DEFAULT 0,
+  dplus INTEGER DEFAULT 0,
+  km INTEGER DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_badges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  badge_name TEXT NOT NULL,
+  earned_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, badge_name)
+);
+
+-- TEAMS & GROUPS
+CREATE TABLE IF NOT EXISTS teams (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  emoji TEXT DEFAULT '🏔️',
+  description TEXT,
+  sport TEXT NOT NULL,
+  location TEXT,
+  is_public BOOLEAN DEFAULT TRUE,
+  next_event TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS team_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(team_id, user_id)
+);
+
+-- MESSAGING
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  is_group BOOLEAN DEFAULT FALSE,
+  group_name TEXT,
+  group_emoji TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS conversation_participants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  last_read_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(conversation_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES profiles(id),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at DESC);
+
+-- ACTIVITIES
+CREATE TABLE IF NOT EXISTS activities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  sport TEXT NOT NULL,
+  title TEXT,
+  duration_minutes INTEGER,
+  distance_km NUMERIC(10,2),
+  dplus_meters INTEGER,
+  notes TEXT,
+  gpx_data JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_activities_user ON activities(user_id, created_at DESC);
+
+-- SPOTS & MAP
+CREATE TABLE IF NOT EXISTS spots (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  sport TEXT NOT NULL,
+  description TEXT,
+  emoji TEXT DEFAULT '📍',
+  rating NUMERIC(2,1) DEFAULT 0,
+  location GEOGRAPHY(POINT, 4326) NOT NULL,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_spots_location ON spots USING GIST(location);
+
+CREATE TABLE IF NOT EXISTS spot_conditions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  spot_id UUID NOT NULL REFERENCES spots(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id),
+  status TEXT NOT NULL,
+  comment TEXT,
+  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- MARKETPLACE
+CREATE TABLE IF NOT EXISTS market_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  seller_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  emoji TEXT DEFAULT '🎒',
+  price NUMERIC(10,2) NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('sell', 'rent')),
+  condition TEXT,
+  sport TEXT,
+  is_available BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- EVENTS
+CREATE TABLE IF NOT EXISTS events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT,
+  emoji TEXT DEFAULT '📅',
+  sport TEXT,
+  location TEXT,
+  date TIMESTAMPTZ NOT NULL,
+  price TEXT,
+  spots_available INTEGER,
+  tag TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS event_registrations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  registered_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(event_id, user_id)
+);
+
+-- ROW LEVEL SECURITY
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_sports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spot_conditions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE market_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE event_registrations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Profiles are viewable by everyone" ON profiles;
+CREATE POLICY "Profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Teams are viewable by everyone" ON teams;
+CREATE POLICY "Teams are viewable by everyone" ON teams FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Team admins can update" ON teams;
+CREATE POLICY "Team admins can update" ON teams FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM team_members WHERE team_id = teams.id AND user_id = auth.uid() AND role = 'admin')
+);
+
+DROP POLICY IF EXISTS "Messages visible to participants" ON messages;
+CREATE POLICY "Messages visible to participants" ON messages FOR SELECT USING (
+  EXISTS (SELECT 1 FROM conversation_participants WHERE conversation_id = messages.conversation_id AND user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Participants can send messages" ON messages;
+CREATE POLICY "Participants can send messages" ON messages FOR INSERT WITH CHECK (
+  auth.uid() = sender_id AND
+  EXISTS (SELECT 1 FROM conversation_participants WHERE conversation_id = messages.conversation_id AND user_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS "Users see own activities" ON activities;
+CREATE POLICY "Users see own activities" ON activities FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users insert own activities" ON activities;
+CREATE POLICY "Users insert own activities" ON activities FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Spots are viewable by everyone" ON spots;
+CREATE POLICY "Spots are viewable by everyone" ON spots FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can add spots" ON spots;
+CREATE POLICY "Authenticated users can add spots" ON spots FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "Market items viewable by everyone" ON market_items;
+CREATE POLICY "Market items viewable by everyone" ON market_items FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Sellers manage own items" ON market_items;
+CREATE POLICY "Sellers manage own items" ON market_items FOR ALL USING (auth.uid() = seller_id);
+
+DROP POLICY IF EXISTS "Events viewable by everyone" ON events;
+CREATE POLICY "Events viewable by everyone" ON events FOR SELECT USING (true);
+
+-- FUNCTIONS & TRIGGERS
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO profiles (id, name, avatar)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    '🧑'
+  );
+  INSERT INTO user_stats (user_id) VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER update_profiles_timestamp BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_teams_timestamp BEFORE UPDATE ON teams FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_spots_timestamp BEFORE UPDATE ON spots FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_market_items_timestamp BEFORE UPDATE ON market_items FOR EACH ROW EXECUTE FUNCTION update_updated_at();`;
+
+const SQL2 = `-- ============================================================================
+-- ADVENTURER - Monetization & Growth Schema (Migration v2)
+-- Run this AFTER the initial schema.sql
+-- Idempotent: safe to re-run.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS coaches (
+  id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL,
+  bio TEXT,
+  sports TEXT[] NOT NULL DEFAULT '{}',
+  certifications TEXT[] DEFAULT '{}',
+  languages TEXT[] DEFAULT '{fr}',
+  base_location TEXT,
+  hourly_rate_cents INTEGER NOT NULL DEFAULT 6500,
+  currency TEXT NOT NULL DEFAULT 'eur',
+  is_published BOOLEAN DEFAULT FALSE,
+  is_verified BOOLEAN DEFAULT FALSE,
+  stripe_account_id TEXT,
+  stripe_onboarding_complete BOOLEAN DEFAULT FALSE,
+  stripe_charges_enabled BOOLEAN DEFAULT FALSE,
+  stripe_payouts_enabled BOOLEAN DEFAULT FALSE,
+  rating_avg NUMERIC(2,1),
+  review_count INTEGER DEFAULT 0,
+  session_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_coaches_sports ON coaches USING GIN(sports);
+CREATE INDEX IF NOT EXISTS idx_coaches_published ON coaches(is_published) WHERE is_published = TRUE;
+
+CREATE TABLE IF NOT EXISTS coach_bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  coach_id UUID NOT NULL REFERENCES coaches(id),
+  client_id UUID NOT NULL REFERENCES profiles(id),
+  sport TEXT NOT NULL,
+  session_date TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER NOT NULL DEFAULT 60,
+  location TEXT,
+  meeting_url TEXT,
+  client_note TEXT,
+  price_cents INTEGER NOT NULL,
+  platform_fee_cents INTEGER NOT NULL,
+  coach_payout_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'eur',
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+    'pending', 'paid', 'confirmed', 'completed', 'cancelled', 'refunded', 'disputed'
+  )),
+  stripe_checkout_session_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT,
+  cancellation_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_bookings_client ON coach_bookings(client_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bookings_coach ON coach_bookings(coach_id, session_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON coach_bookings(status);
+
+CREATE TABLE IF NOT EXISTS coach_reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_id UUID NOT NULL REFERENCES coach_bookings(id) ON DELETE CASCADE,
+  coach_id UUID NOT NULL REFERENCES coaches(id),
+  client_id UUID NOT NULL REFERENCES profiles(id),
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(booking_id)
+);
+
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS stripe_price_id TEXT;
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS shipping_available BOOLEAN DEFAULT FALSE;
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS shipping_cost_cents INTEGER DEFAULT 0;
+ALTER TABLE market_items ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS marketplace_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  item_id UUID NOT NULL REFERENCES market_items(id),
+  seller_id UUID NOT NULL REFERENCES profiles(id),
+  buyer_id UUID NOT NULL REFERENCES profiles(id),
+  price_cents INTEGER NOT NULL,
+  shipping_cents INTEGER NOT NULL DEFAULT 0,
+  platform_fee_cents INTEGER NOT NULL,
+  seller_payout_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'eur',
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+    'pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded', 'disputed'
+  )),
+  stripe_checkout_session_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT,
+  shipping_address JSONB,
+  tracking_number TEXT,
+  buyer_note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_market_orders_buyer ON marketplace_orders(buyer_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_market_orders_seller ON marketplace_orders(seller_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_market_orders_status ON marketplace_orders(status);
+
+CREATE TABLE IF NOT EXISTS seller_accounts (
+  id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  stripe_account_id TEXT UNIQUE,
+  stripe_onboarding_complete BOOLEAN DEFAULT FALSE,
+  stripe_charges_enabled BOOLEAN DEFAULT FALSE,
+  stripe_payouts_enabled BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ambassadors (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id),
+  email TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  sport TEXT NOT NULL,
+  city TEXT NOT NULL,
+  country TEXT NOT NULL,
+  instagram_handle TEXT,
+  strava_link TEXT,
+  youtube_link TEXT,
+  audience_size INTEGER,
+  referral_code TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'prospect' CHECK (status IN (
+    'prospect', 'contacted', 'onboarding', 'active', 'paused', 'churned'
+  )),
+  contacted_at TIMESTAMPTZ,
+  activated_at TIMESTAMPTZ,
+  notes TEXT,
+  total_referrals INTEGER DEFAULT 0,
+  total_commission_cents INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ambassadors_code ON ambassadors(referral_code);
+CREATE INDEX IF NOT EXISTS idx_ambassadors_status ON ambassadors(status);
+
+CREATE TABLE IF NOT EXISTS ambassador_referrals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  ambassador_id UUID NOT NULL REFERENCES ambassadors(id),
+  referred_user_id UUID NOT NULL REFERENCES profiles(id),
+  source TEXT,
+  commission_cents INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(ambassador_id, referred_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS payout_ledger (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  account_id UUID NOT NULL REFERENCES profiles(id),
+  kind TEXT NOT NULL CHECK (kind IN ('coach_session', 'marketplace_sale', 'ambassador_referral', 'refund', 'adjustment')),
+  reference_id UUID,
+  amount_cents INTEGER NOT NULL,
+  platform_fee_cents INTEGER DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'eur',
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid_out', 'failed')),
+  stripe_transfer_id TEXT,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ledger_account ON payout_ledger(account_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS waitlist (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL,
+  feature TEXT NOT NULL,
+  locale TEXT DEFAULT 'fr',
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(email, feature)
+);
+
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  source TEXT,
+  sports TEXT[] DEFAULT '{}',
+  locale TEXT DEFAULT 'fr',
+  confirmed_at TIMESTAMPTZ,
+  unsubscribed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE coaches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coach_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE marketplace_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE seller_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ambassadors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ambassador_referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payout_ledger ENABLE ROW LEVEL SECURITY;
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Published coaches viewable" ON coaches;
+CREATE POLICY "Published coaches viewable" ON coaches FOR SELECT USING (is_published = TRUE OR auth.uid() = id);
+DROP POLICY IF EXISTS "Coaches manage own profile" ON coaches;
+CREATE POLICY "Coaches manage own profile" ON coaches FOR ALL USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Bookings visible to participants" ON coach_bookings;
+CREATE POLICY "Bookings visible to participants" ON coach_bookings FOR SELECT USING (
+  auth.uid() = client_id OR auth.uid() = coach_id
+);
+DROP POLICY IF EXISTS "Clients create bookings" ON coach_bookings;
+CREATE POLICY "Clients create bookings" ON coach_bookings FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+DROP POLICY IF EXISTS "Reviews viewable by everyone" ON coach_reviews;
+CREATE POLICY "Reviews viewable by everyone" ON coach_reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Clients write reviews" ON coach_reviews;
+CREATE POLICY "Clients write reviews" ON coach_reviews FOR INSERT WITH CHECK (auth.uid() = client_id);
+
+DROP POLICY IF EXISTS "Orders visible to participants" ON marketplace_orders;
+CREATE POLICY "Orders visible to participants" ON marketplace_orders FOR SELECT USING (
+  auth.uid() = buyer_id OR auth.uid() = seller_id
+);
+DROP POLICY IF EXISTS "Buyers create orders" ON marketplace_orders;
+CREATE POLICY "Buyers create orders" ON marketplace_orders FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+
+DROP POLICY IF EXISTS "Sellers manage own account" ON seller_accounts;
+CREATE POLICY "Sellers manage own account" ON seller_accounts FOR ALL USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Ambassadors see own record" ON ambassadors;
+CREATE POLICY "Ambassadors see own record" ON ambassadors FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Anyone can join waitlist" ON waitlist;
+CREATE POLICY "Anyone can join waitlist" ON waitlist FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Anyone can subscribe newsletter" ON newsletter_subscribers;
+CREATE POLICY "Anyone can subscribe newsletter" ON newsletter_subscribers FOR INSERT WITH CHECK (true);
+
+CREATE OR REPLACE TRIGGER update_coaches_timestamp BEFORE UPDATE ON coaches FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_bookings_timestamp BEFORE UPDATE ON coach_bookings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_orders_timestamp BEFORE UPDATE ON marketplace_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_seller_accounts_timestamp BEFORE UPDATE ON seller_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE OR REPLACE TRIGGER update_ambassadors_timestamp BEFORE UPDATE ON ambassadors FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE OR REPLACE FUNCTION recompute_coach_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE coaches SET
+    rating_avg = (SELECT AVG(rating)::NUMERIC(2,1) FROM coach_reviews WHERE coach_id = NEW.coach_id),
+    review_count = (SELECT COUNT(*) FROM coach_reviews WHERE coach_id = NEW.coach_id),
+    updated_at = NOW()
+  WHERE id = NEW.coach_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_coach_review_insert ON coach_reviews;
+CREATE TRIGGER trg_coach_review_insert AFTER INSERT ON coach_reviews FOR EACH ROW EXECUTE FUNCTION recompute_coach_rating();`;
+
+// ========== COPY FUNCTIONS ==========
+
+document.getElementById('sql1').value = SQL1;
+document.getElementById('sql2').value = SQL2;
+
+function copySQL1() {
+  navigator.clipboard.writeText(SQL1).then(() => {
+    const btn = document.getElementById('btn1');
+    btn.textContent = '✅ Copie ! Colle dans Supabase →';
+    btn.classList.add('copied');
+  });
+}
+
+function copySQL2() {
+  navigator.clipboard.writeText(SQL2).then(() => {
+    const btn = document.getElementById('btn2');
+    btn.textContent = '✅ Copie ! Colle dans Supabase →';
+    btn.classList.add('copied');
+  });
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function updateProgress() {
+  const checks = [
+    document.getElementById('check1').checked,
+    document.getElementById('check2').checked,
+    document.getElementById('check3').checked,
+    document.getElementById('check4').checked,
+  ];
+  const done = checks.filter(Boolean).length;
+  document.getElementById('progressBar').style.width = (done / 4 * 100) + '%';
+  document.getElementById('progressText').textContent = done + '/4 etapes completees' + (done === 4 ? ' 🎉' : '');
+}
+</script>
+
+</body>
+</html>

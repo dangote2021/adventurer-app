@@ -1,0 +1,53 @@
+# Build artifacts — Vercel rebuild from sources
+.next/
+out/
+node_modules/
+.cache/
+
+# Capacitor native (pas déployé sur Vercel)
+android/
+ios/
+
+# Environnement local (Vercel utilise les env vars du projet)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+
+# Dépôt git local
+.git/
+.gitignore
+
+# Docs et assets de développement
+*.md
+!docs/**/*.md
+auto-deploy.html
+COPIER-SQL-SUPABASE.html
+SETUP-SUPABASE-COMPLET.html
+deploy-payload.json
+
+# Scripts de deploy locaux (pas besoin côté serveur)
+deploy.bat
+deploy-all.bat
+deploy.sh
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tests
+coverage/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/

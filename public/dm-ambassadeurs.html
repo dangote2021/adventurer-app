@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DMs Ambassadeurs — Adventurer</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; background: #FEFAE0; color: #1B4332; margin: 0; padding: 24px; }
+  h1 { margin: 0 0 4px; }
+  p.sub { color: #555; margin: 0 0 20px; font-size: 14px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  label { font-size: 12px; color: #1B4332; font-weight: 600; display: block; margin-bottom: 4px; }
+  input, select { padding: 10px 12px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; flex: 1; min-width: 160px; background: white; color: #111; }
+  .card { background: white; border: 1px solid #eee; border-radius: 16px; padding: 18px; margin-bottom: 14px; position: relative; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; color: #2D6A4F; }
+  .msg { white-space: pre-wrap; font-size: 14px; line-height: 1.5; background: #FEFAE0; padding: 12px; border-radius: 10px; border: 1px dashed #DDA15E; }
+  button { background: #1B4332; color: white; border: 0; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  button:hover { background: #2D6A4F; }
+  button.copied { background: #2e7d32; }
+  .topbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .meta { font-size: 12px; color: #777; }
+  footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>📨 DMs Ambassadeurs Adventurer</h1>
+<p class="sub">Personnalise et copie/colle chaque message en 1 clic. Adapté au sport et à la région.</p>
+
+<div class="row">
+  <div>
+    <label>Ton prénom (expéditeur)</label>
+    <input id="sender" value="" placeholder="Ton prénom" />
+  </div>
+  <div>
+    <label>URL candidature</label>
+    <input id="url" value="https://adventurer-outdoor.vercel.app/ambassadors" />
+  </div>
+  <div>
+    <label>Commission (€)</label>
+    <input id="commission" type="number" value="5" />
+  </div>
+</div>
+
+<div id="messages"></div>
+
+<footer>Adventurer · Made for outdoor tribes</footer>
+
+<script>
+const cibles = [
+  { sport: 'Kitesurf', region: 'Tarifa', tribu: 'kite Tarifa' },
+  { sport: 'Kitesurf', region: 'Leucate / Narbonne-Plage', tribu: 'kite Leucate' },
+  { sport: 'Kitesurf', region: 'Dakhla / Essaouira', tribu: 'kite Maroc' },
+  { sport: 'Apnée', region: 'Nice / Marseille', tribu: 'apnée Méditerranée' },
+  { sport: 'Wing foil', region: 'Bretagne / La Torche', tribu: 'wing foil Bretagne' },
+  { sport: 'Surf', region: 'Hossegor / Capbreton', tribu: 'surf Landes' },
+  { sport: 'Voile', region: 'Atlantique / Manche', tribu: 'voile aventure' },
+  { sport: 'Paddle / SUP', region: 'Corse / Côte d\'Azur', tribu: 'paddle Med' },
+  { sport: 'Trail', region: 'Chamonix / UTMB', tribu: 'trail Mont-Blanc' },
+  { sport: 'Ultra-trail', region: 'Cévennes / Ardèche', tribu: 'ultra-trail Sud' },
+  { sport: 'Alpinisme', region: 'Chamonix / Zermatt', tribu: 'alpinisme Alpes' },
+  { sport: 'Escalade / Bloc', region: 'Fontainebleau', tribu: 'bloc Bleau' },
+  { sport: 'Gravel / Bikepacking', region: 'Pyrénées', tribu: 'gravel Pyrénées' },
+  { sport: 'Ski de rando', region: 'Aravis / Beaufortain', tribu: 'ski rando Alpes du Nord' },
+  { sport: 'Randonnée / GR', region: 'Corse / GR20', tribu: 'fastpacking GR20' },
+  { sport: 'VTT Enduro', region: 'Finale Ligure / Alpes du Sud', tribu: 'VTT Alpes du Sud' },
+  { sport: 'Parapente', region: 'Saint-Hilaire / Annecy', tribu: 'parapente Alpes' },
+  { sport: 'Speedriding', region: 'Chamonix', tribu: 'speedriding Mont-Blanc' },
+  { sport: 'Vol à voile / ULM', region: 'Pyrénées', tribu: 'vol libre Pyrénées' },
+  { sport: 'Plongée', region: 'Porquerolles / Cap Corse', tribu: 'plongée Med' },
+];
+
+function buildMessage(c, sender, url, commission) {
+  return `Salut !
+
+Je suis ${sender}, fondateur d'Adventurer — l'app outdoor qui réunit les 3 temps de l'aventure (préparation, terrain, retour). On cherche 20 ambassadeurs pour lancer la tribu ${c.tribu}.
+
+Concrètement :
+• ${commission} € par inscription via ton code
+• Matos Adventurer en avant-première
+• Ton spot / itinéraire / défi mis en vedette
+• Accès early à toute l'app
+
+Candidature en 30 sec : ${url}
+
+Tu en dis quoi ?`;
+}
+
+function render() {
+  const sender = document.getElementById('sender').value || 'L\'équipe Adventurer';
+  const url = document.getElementById('url').value;
+  const commission = document.getElementById('commission').value || '5';
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
+  cibles.forEach((c, i) => {
+    const msg = buildMessage(c, sender, url, commission);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="topbar">
+        <h3>#${i+1} · ${c.sport} — ${c.region}</h3>
+      </div>
+      <div class="msg" id="msg-${i}">${msg.replace(/</g,'&lt;')}</div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <button onclick="copyMsg(${i})" id="btn-${i}">Copier</button>
+        <span class="meta" id="meta-${i}">${msg.length} caractères</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function copyMsg(i) {
+  const txt = document.getElementById('msg-'+i).innerText;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('btn-'+i);
+    btn.textContent = '✓ Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+['sender','url','commission'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#2D6A4F"/>
+      <stop offset="100%" stop-color="#1B4332"/>
+    </radialGradient>
+    <linearGradient id="mountainFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F6D7A7"/>
+      <stop offset="100%" stop-color="#E2B47D"/>
+    </linearGradient>
+    <linearGradient id="mountainBack" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D4A373"/>
+      <stop offset="100%" stop-color="#B08457"/>
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9A03F"/>
+      <stop offset="100%" stop-color="#D65A1A"/>
+    </linearGradient>
+    <clipPath id="circleClip">
+      <circle cx="256" cy="256" r="244"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="244" fill="url(#bg)"/>
+
+  <g clip-path="url(#circleClip)">
+    <!-- Sun with rays -->
+    <g>
+      <!-- Rays -->
+      <g stroke="#F9A03F" stroke-width="5" stroke-linecap="round" opacity="0.85">
+        <line x1="175" y1="60"  x2="175" y2="92"/>
+        <line x1="105" y1="130" x2="130" y2="145"/>
+        <line x1="95"  y1="205" x2="125" y2="205"/>
+        <line x1="225" y1="130" x2="215" y2="150"/>
+        <line x1="120" y1="78"  x2="140" y2="100"/>
+        <line x1="230" y1="78"  x2="212" y2="100"/>
+        <line x1="110" y1="175" x2="135" y2="180"/>
+        <line x1="245" y1="175" x2="220" y2="180"/>
+      </g>
+      <!-- Sun disk -->
+      <circle cx="175" cy="170" r="46" fill="url(#sunGrad)"/>
+    </g>
+
+    <!-- Back mountain (right, smaller) -->
+    <path d="M 270 360 L 385 175 L 500 360 Z" fill="url(#mountainBack)"/>
+
+    <!-- Front mountain (main peak) -->
+    <path d="M 90 380 L 270 120 L 450 380 Z" fill="url(#mountainFront)"/>
+
+    <!-- Snow cap on main peak -->
+    <path d="M 243 160 L 270 120 L 297 160 L 285 175 L 275 168 L 265 178 L 255 170 Z" fill="#FFFFFF"/>
+
+    <!-- Lake / water -->
+    <path d="M 0 370 Q 256 410 512 370 L 512 420 Q 256 450 0 420 Z" fill="#1E6091" opacity="0.9"/>
+    <path d="M 140 390 Q 200 400 260 390" stroke="#EAF4F4" stroke-width="2" fill="none" opacity="0.4"/>
+    <path d="M 310 395 Q 360 403 410 395" stroke="#EAF4F4" stroke-width="2" fill="none" opacity="0.4"/>
+
+    <!-- Foreground shadow on water -->
+    <rect x="0" y="420" width="512" height="92" fill="#1B4332"/>
+
+    <!-- Text ADVENTURER -->
+    <text x="256" y="475"
+          text-anchor="middle"
+          font-family="'Helvetica Neue', Arial, sans-serif"
+          font-weight="900"
+          font-size="48"
+          letter-spacing="3"
+          fill="#FEFAE0">ADVENTURER</text>
+  </g>
+</svg>

@@ -1,0 +1,119 @@
+{
+  "name": "Adventurer — Compagnon d'aventure outdoor",
+  "short_name": "Adventurer",
+  "description": "Prépare, vis et partage tes aventures outdoor. Trail, kitesurf, alpinisme, plongée et 50+ sports. Coaching IA, spots, communauté.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1B4332",
+  "background_color": "#0a0c10",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["sports", "lifestyle", "health", "fitness", "social"],
+  "icons": [
+    {
+      "src": "/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Page d'accueil Adventurer"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorer les spots",
+      "short_name": "Explorer",
+      "url": "/?page=explore",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Coach IA",
+      "short_name": "Coach",
+      "url": "/?page=coach-ai",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Marketplace",
+      "short_name": "Market",
+      "url": "/?page=marketplace",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.adventurer.outdoor"
+    }
+  ]
+}

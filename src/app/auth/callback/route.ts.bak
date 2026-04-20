@@ -1,0 +1,1 @@
+// Deprecated - auth callback moved to page.tsx (client-side PKCE flow)
