@@ -14,7 +14,7 @@ if (!stripeSecret) {
 
 export const stripe = stripeSecret
   ? new Stripe(stripeSecret, {
-      apiVersion: '2024-10-28.acacia',
+      apiVersion: '2025-02-24.acacia',
       typescript: true,
       appInfo: { name: 'Adventurer', version: '5.0.0' },
     })

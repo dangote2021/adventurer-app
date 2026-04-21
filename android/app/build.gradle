@@ -16,10 +16,35 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    // Signature de release — nécessaire pour publier sur Play Store.
+    // Prérequis (à faire une seule fois) :
+    //   cd android
+    //   keytool -genkey -v -keystore adventurer-upload.keystore -alias adventurer \
+    //           -keyalg RSA -keysize 2048 -validity 10000
+    // Puis exporter le mot de passe avant le build :
+    //   export ADV_KS_PASSWORD="ton-mot-de-passe"
+    // Le keystore doit vivre à la racine du dossier android/ et rester hors du repo.
+    signingConfigs {
+        release {
+            def keystoreFile = file('../adventurer-upload.keystore')
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword System.getenv('ADV_KS_PASSWORD') ?: (project.findProperty('ADV_KS_PASSWORD') ?: '')
+                keyAlias 'adventurer'
+                keyPassword System.getenv('ADV_KS_PASSWORD') ?: (project.findProperty('ADV_KS_PASSWORD') ?: '')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Applique signingConfig seulement si le keystore existe — ça permet au build debug de fonctionner sans clé.
+            if (file('../adventurer-upload.keystore').exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

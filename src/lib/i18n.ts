@@ -472,8 +472,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'onb.suggest.start': 'Explorer',
 
     // V3 — UI common (full EN coverage)
-    'common.back': 'Retour',
-    'common.close': 'Fermer',
     'common.share': 'Partager',
     'common.add': 'Ajouter',
     'common.me': 'Moi',
@@ -1060,8 +1058,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'onb.suggest.start': 'Explore',
 
     // V3 — UI common
-    'common.back': 'Back',
-    'common.close': 'Close',
     'common.share': 'Share',
     'common.add': 'Add',
     'common.me': 'Me',

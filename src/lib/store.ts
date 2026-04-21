@@ -10,7 +10,7 @@ export type SubPage = 'coach-ai' | 'coach-hub' | 'marketplace' | 'teams' | 'priv
   { type: 'marketplace' } |
   { type: 'rankings' } |
   { type: 'teams' } |
-  { type: 'trail-detail'; trailId: number } |
+  { type: 'trail-detail'; trailId: string | number } |
   { type: 'user-profile'; userId: string } |
   { type: 'team-detail'; teamId: string } |
   { type: 'conversation'; conversationId: string } |
@@ -148,10 +148,10 @@ interface AppState {
   userLat: number | null;
   userLng: number | null;
   geoPermission: 'granted' | 'denied' | 'prompt' | null;
-  dismissedAdventures: number[];
-  dismissedEvents: number[];
-  plannedAdventures: number[];
-  plannedChallenges: number[];
+  dismissedAdventures: (string | number)[];
+  dismissedEvents: (string | number)[];
+  plannedAdventures: (string | number)[];
+  plannedChallenges: (string | number)[];
   joinedTeams: string[];
   hasSeenWelcome: boolean;
   hasSeenTutorial: boolean;
@@ -282,14 +282,14 @@ interface AppState {
   getFriendList: () => string[];
   setUserLocation: (lat: number, lng: number) => void;
   setGeoPermission: (perm: 'granted' | 'denied' | 'prompt') => void;
-  dismissAdventure: (id: number) => void;
-  dismissEvent: (id: number) => void;
-  togglePlannedAdventure: (id: number) => void;
-  togglePlannedChallenge: (id: number) => void;
+  dismissAdventure: (id: string | number) => void;
+  dismissEvent: (id: string | number) => void;
+  togglePlannedAdventure: (id: string | number) => void;
+  togglePlannedChallenge: (id: string | number) => void;
   toggleTeamMembership: (teamId: string) => void;
   isTeamJoined: (teamId: string) => boolean;
-  isAdventurePlanned: (id: number) => boolean;
-  isChallengePlanned: (id: number) => boolean;
+  isAdventurePlanned: (id: string | number) => boolean;
+  isChallengePlanned: (id: string | number) => boolean;
   markWelcomeSeen: () => void;
   markTutorialSeen: () => void;
   hasSport: (name: string) => boolean;

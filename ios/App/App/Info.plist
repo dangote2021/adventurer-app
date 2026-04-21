@@ -47,5 +47,41 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Adventurer utilise ta position pour afficher les spots outdoor près de toi, enregistrer tes sorties (trail, kite, ski...) et partager ta position lors du Safety Check-in.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Adventurer peut partager ta position en arrière-plan pendant un Safety Check-in, pour que tes proches puissent te suivre pendant ta sortie.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Adventurer utilise la caméra pour prendre des photos de tes spots et aventures, et pour les ajouter à tes carnets de voyage.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Adventurer accède à ta galerie pour que tu puisses ajouter des photos à ton profil, tes spots et tes carnets d'aventures.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Adventurer peut enregistrer les photos de tes aventures dans ta galerie.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Adventurer utilise les données de mouvement pour compter tes pas, estimer ton dénivelé et tracker tes sorties.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Adventurer peut lire tes données d'activité Apple Health (distance, dénivelé, rythme cardiaque) pour enrichir tes aventures et suivre ta progression.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Adventurer peut enregistrer tes sorties (trail, ski, vélo...) dans Apple Health.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Adventurer utilise Face ID pour sécuriser ton accès à l'app.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.adventurer.outdoor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>adventurer</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

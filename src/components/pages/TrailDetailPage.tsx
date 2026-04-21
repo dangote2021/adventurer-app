@@ -7,7 +7,7 @@ import { estimateWeather, isNauticalSport, buildGPX, downloadGPX } from '@/lib/w
 import { QuickMatchModal, SafetyCheckInModal, RouteReportModal } from '@/components/modals/V2Modals';
 
 interface TrailDetailPageProps {
-  trailId?: number;
+  trailId?: string | number;
 }
 
 const DEFAULT_PARTICIPANTS = [
