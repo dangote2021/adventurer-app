@@ -30,7 +30,7 @@ export const metadata: Metadata = {
       'Préparer, vivre et partager tes aventures outdoor. Multi-sports, communauté et coach IA intégrés.',
     url: 'https://adventurer-outdoor.vercel.app',
     siteName: 'Adventurer',
-    images: [{ url: '/logo.svg', width: 1200, height: 630, alt: 'Adventurer' }],
+    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'Adventurer' }],
     locale: 'fr_FR',
     type: 'website',
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Adventurer — L\'app outdoor multi-sports',
     description: 'Trail, kitesurf, alpinisme, apnée… réunis dans une seule app.',
-    images: ['/logo.svg'],
+    images: ['/logo.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {

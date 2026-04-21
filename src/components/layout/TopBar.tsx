@@ -29,7 +29,7 @@ export default function TopBar() {
           onClick={() => { closeSubPage(); setPage('home'); }}
           aria-label="Retour à l'accueil"
         >
-          <img src="/logo.svg" alt="Adventurer" className="w-10 h-10 rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <img src="/logo-icon.svg" alt="Adventurer" className="w-10 h-10 rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <div className="text-left">
             <h1 className="text-lg font-bold bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
               Adventurer

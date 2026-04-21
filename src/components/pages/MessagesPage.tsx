@@ -177,7 +177,10 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
             type="button"
             className="px-3 py-1.5 bg-[var(--accent)] text-white rounded-full text-sm font-medium hover:opacity-90 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label={t('messages.newConvAriaLabel', language)}
-            onClick={() => showToast(t('messages.newHint', language), 'info', '💬')}
+            onClick={() => {
+              showToast(t('messages.newHint', language), 'info', '💬');
+              setSubPage('quick-match-list');
+            }}
           >
             + {t('messages.new', language)}
           </button>

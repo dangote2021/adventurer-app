@@ -67,6 +67,8 @@ function AuthBridge() {
 }
 
 // P1 fix: Delayed cookie banner — shows after 30 seconds instead of immediately
+// Also reset local `show` state when consent is given or banner is dismissed,
+// otherwise the banner stays stuck on screen after clicking Accept/Reject.
 function DelayedCookieBanner() {
   const { showCookieBanner, gdprConsent } = useStore();
   const [show, setShow] = useState(false);
@@ -75,6 +77,8 @@ function DelayedCookieBanner() {
       const timer = setTimeout(() => setShow(true), 30000);
       return () => clearTimeout(timer);
     }
+    // Consent given or banner hidden → collapse the banner immediately
+    setShow(false);
   }, [showCookieBanner, gdprConsent]);
   if (!show) return null;
   return <CookieBanner />;

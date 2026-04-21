@@ -8,11 +8,21 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendWaitlistConfirmation } from '@/lib/email/resend';
 import { extractReferralCode, creditReferral } from '@/lib/referral';
+import { allow, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
+  // Rate limit : 5 inscriptions par IP / 5 min — évite les bots qui spamment la waitlist.
+  const ip = getClientIp(req);
+  if (!allow(`waitlist:${ip}`, 5, 5 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again in a few minutes.' },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const { email, feature, locale, metadata } = body as {
     email?: string;

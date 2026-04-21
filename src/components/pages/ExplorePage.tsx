@@ -512,16 +512,27 @@ export default function ExplorePage() {
                   </div>
                 )}
                 <div className="border-t border-[var(--border)] pt-3">
-                  <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
-                  <div className="flex gap-2">
-                    {[1, 2, 3].map((idx) => (
-                      <button key={idx} onClick={() => setSubPage({ type: 'user-profile', userId: `user-${idx}` })}
-                        aria-label={`View user profile ${idx}`}
-                        className="w-10 h-10 bg-[var(--accent)]/30 rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--accent)]/40 transition-colors font-semibold text-white">
-                        {idx}
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSubPage({ type: 'trail-detail', trailId: spot.id })}
+                    className="w-full text-left"
+                    aria-label={fr ? 'Voir le spot et qui y va' : 'View spot and who is going'}
+                  >
+                    <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {['🏔️', '🧗', '🏃'].map((emoji, idx) => (
+                          <div
+                            key={idx}
+                            className="w-10 h-10 bg-[var(--accent)]/30 ring-2 ring-[var(--card)] rounded-full flex items-center justify-center text-lg"
+                          >
+                            {emoji}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-xs text-[var(--accent)] font-semibold ml-2">{fr ? 'Voir →' : 'See →'}</span>
+                    </div>
+                  </button>
                 </div>
               </div>
             ))}
@@ -601,19 +612,27 @@ export default function ExplorePage() {
                   </span>
                 </div>
                 <div className="border-t border-[var(--border)] pt-3">
-                  <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
-                  <div className="flex gap-2">
-                    {[1, 2, 3].map((idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSubPage({ type: 'user-profile', userId: `user-${idx}` })}
-                        aria-label={`View user profile ${idx}`}
-                        className="w-10 h-10 bg-[var(--accent)]/30 rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--accent)]/40 transition-colors font-semibold text-white"
-                      >
-                        {idx}
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSubPage({ type: 'trail-detail', trailId: spot.id })}
+                    className="w-full text-left"
+                    aria-label={fr ? 'Voir le spot et qui y va' : 'View spot and who is going'}
+                  >
+                    <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {['🪁', '🌊', '🏄'].map((emoji, idx) => (
+                          <div
+                            key={idx}
+                            className="w-10 h-10 bg-[var(--accent)]/30 ring-2 ring-[var(--card)] rounded-full flex items-center justify-center text-lg"
+                          >
+                            {emoji}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-xs text-[var(--accent)] font-semibold ml-2">{fr ? 'Voir →' : 'See →'}</span>
+                    </div>
+                  </button>
                 </div>
               </div>
             ))}

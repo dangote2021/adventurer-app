@@ -37,8 +37,10 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(raw, sig, whSecret);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Invalid signature: ${msg}` }, { status: 400 });
+    // Log the detailed reason server-side but don't leak it to the client.
+    // eslint-disable-next-line no-console
+    console.error('[stripe webhook] invalid signature', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Invalid signature.' }, { status: 400 });
   }
 
   try {

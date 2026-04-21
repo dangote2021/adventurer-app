@@ -121,6 +121,13 @@ async function fetchActivities(accessToken: string): Promise<NextResponse> {
 
     const activities = await response.json();
 
+    // Strava may return an error object (e.g. `{ errors: [...] }`) with a 2xx status
+    // in some rate-limit edge cases. Bail out cleanly before calling .map.
+    if (!Array.isArray(activities)) {
+      console.error('Strava returned non-array payload:', activities);
+      return NextResponse.json({ activities: [] });
+    }
+
     // Map Strava activities to our format
     const mapped = activities.map((act: Record<string, unknown>) => ({
       id: `strava-${act.id}`,

@@ -14,6 +14,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { allow, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -89,13 +90,41 @@ export async function POST(req: Request) {
   const { error: authError } = await requireAuth(req as import('next/server').NextRequest);
   if (authError) return authError;
 
+  // Rate limit : 5 plans par IP / heure — freine les users authentifiés qui tenteraient
+  // de générer des plans en boucle (LLM payant).
+  const ip = getClientIp(req);
+  if (!allow(`coach-ai:${ip}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Trop de plans générés. Réessaie dans une heure.' },
+      { status: 429 }
+    );
+  }
+
   const body = (await req.json().catch(() => ({}))) as Body;
 
-  const { sport, goal, weeks = 4, current_level = 'intermediate', weekly_hours = 5, constraints, history_hint } = body;
+  const rawSport = body.sport;
+  const rawGoal = body.goal;
+  const rawWeeks = body.weeks;
+  const rawLevel = body.current_level;
+  const rawWeeklyHours = body.weekly_hours;
+  const rawConstraints = body.constraints;
+  const rawHistory = body.history_hint;
 
-  if (!sport || !goal) {
+  if (typeof rawSport !== 'string' || typeof rawGoal !== 'string' || !rawSport.trim() || !rawGoal.trim()) {
     return NextResponse.json({ error: 'sport et goal sont requis.' }, { status: 400 });
   }
+
+  // Contraintes strictes pour éviter l'abus de l'API LLM payante et la prompt injection.
+  const sport = rawSport.trim().slice(0, 60);
+  const goal = rawGoal.trim().slice(0, 300);
+  const weeksNum = typeof rawWeeks === 'number' && Number.isFinite(rawWeeks) ? rawWeeks : 4;
+  const weeks = Math.min(Math.max(Math.round(weeksNum), 2), 24);
+  const allowedLevels = new Set(['beginner', 'intermediate', 'advanced', 'debutant', 'intermediaire', 'confirme']);
+  const current_level = typeof rawLevel === 'string' && allowedLevels.has(rawLevel) ? rawLevel : 'intermediate';
+  const hoursNum = typeof rawWeeklyHours === 'number' && Number.isFinite(rawWeeklyHours) ? rawWeeklyHours : 5;
+  const weekly_hours = Math.min(Math.max(hoursNum, 1), 40);
+  const constraints = typeof rawConstraints === 'string' ? rawConstraints.slice(0, 500) : undefined;
+  const history_hint = typeof rawHistory === 'string' ? rawHistory.slice(0, 1000) : undefined;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {

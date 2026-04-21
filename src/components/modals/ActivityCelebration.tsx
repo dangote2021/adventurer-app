@@ -39,8 +39,12 @@ export default function ActivityCelebration() {
   useEffect(() => {
     if (showCelebration && lastActivitySummary) {
       setIsVisible(true);
-      setTimeout(() => setShowShare(true), 1200);
+      const t = setTimeout(() => setShowShare(true), 1200);
+      return () => clearTimeout(t);
     }
+    // Reset local state when celebration is dismissed externally
+    setIsVisible(false);
+    setShowShare(false);
   }, [showCelebration, lastActivitySummary]);
 
   if (!showCelebration || !lastActivitySummary) return null;

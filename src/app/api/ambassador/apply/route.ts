@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendAmbassadorWelcome } from '@/lib/email/resend';
+import { allow, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -27,6 +28,15 @@ function slugify(input: string): string {
 }
 
 export async function POST(req: Request) {
+  // Rate limit : 3 candidatures par IP / 10 min — évite les soumissions automatisées.
+  const ip = getClientIp(req);
+  if (!allow(`ambassador:${ip}`, 3, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Too many applications. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const {
     email,

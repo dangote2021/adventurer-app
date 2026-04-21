@@ -323,7 +323,7 @@ export default function MapPage() {
     if (mapRef.current) {
       mapRef.current.setView([CHAMONIX_LAT, CHAMONIX_LNG], DEFAULT_ZOOM);
     }
-    showToast('Centered on Chamonix');
+    showToast(t('map.centerChamonix', language) || 'Centered on Chamonix');
   };
 
   return (
