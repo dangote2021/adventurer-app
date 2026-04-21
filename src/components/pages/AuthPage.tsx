@@ -5,7 +5,9 @@ import { useAuth } from '@/lib/supabase/auth-provider';
 import { useStore } from '@/lib/store';
 
 export default function AuthPage() {
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithApple } = useAuth();
+  // Apple sign-in temporairement retiré — le provider existe toujours dans auth-provider.tsx et sera réactivé
+  // quand on sortira la version iOS native. V1 = Android + PWA iOS → Google + email suffisent.
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const language = useStore(s => s.language);
   const isEn = language === 'en';
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -47,12 +49,6 @@ export default function AuthPage() {
     if (error) setError(error.message);
   };
 
-  const handleApple = async () => {
-    setError('');
-    const { error } = await signInWithApple();
-    if (error) setError(error.message);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1B4332] to-[#2D6A4F] flex items-center justify-center p-4">
       <div className="w-full max-w-[400px] bg-white rounded-3xl p-8 shadow-2xl">
@@ -70,17 +66,6 @@ export default function AuthPage() {
               : (isEn ? 'Join the outdoor community' : 'Rejoins la communauté outdoor')}
           </p>
         </div>
-
-        {/* Apple Sign In — obligatoire Apple guideline 4.8 dès lors qu'on propose Google */}
-        <button
-          onClick={handleApple}
-          className="w-full flex items-center justify-center gap-3 bg-black text-white rounded-xl py-3 px-4 font-medium hover:bg-gray-900 transition-colors mb-3"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25"/>
-          </svg>
-          Continuer avec Apple
-        </button>
 
         {/* Google Sign In */}
         <button
