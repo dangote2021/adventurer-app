@@ -1,3 +1,5 @@
+import { apiUrl } from '@/lib/api-url';
+
 export interface WeatherEstimate {
   temp: number;
   feels: number;
@@ -55,7 +57,7 @@ export interface WeatherResponse {
  */
 export async function fetchWeather(lat: number, lng: number, sport: string): Promise<WeatherResponse | null> {
   try {
-    const r = await fetch(`/api/weather?lat=${lat}&lng=${lng}&sport=${encodeURIComponent(sport)}`, {
+    const r = await fetch(apiUrl(`/api/weather?lat=${lat}&lng=${lng}&sport=${encodeURIComponent(sport)}`), {
       // Laisse le cache côté Vercel (revalidate 10min)
       cache: 'default',
     });

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 const PERKS = [
   { emoji: '💸', title: '5 € par inscription', desc: 'Commission sur chaque filleul actif, payée via Stripe.' },
@@ -35,7 +36,7 @@ export default function AmbassadorsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ambassador/apply', {
+      const res = await fetch(apiUrl('/api/ambassador/apply'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

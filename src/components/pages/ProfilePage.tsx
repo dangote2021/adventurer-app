@@ -7,6 +7,7 @@ import { getSportEmoji } from '@/lib/sports-config';
 import { t } from '@/lib/i18n';
 import { getUserProfile, getUserSports, getUserStats } from '@/lib/supabase/queries';
 import { supabase } from '@/lib/supabase/client';
+import { apiUrl } from '@/lib/api-url';
 
 // Weather lookup by rough geo region — more realistic than a pure formula
 function estimateWeather(lat: number, lng: number): { temp: number; feels: number; wind: number; humidity: number; icon: string; region: string } {
@@ -171,7 +172,7 @@ export default function ProfilePage() {
   const fetchStravaActivities = async () => {
     setStravaSyncing(true);
     try {
-      const res = await fetch('/api/strava/activities');
+      const res = await fetch(apiUrl('/api/strava/activities'));
       if (res.ok) {
         const data = await res.json();
         if (data.activities && Array.isArray(data.activities)) {

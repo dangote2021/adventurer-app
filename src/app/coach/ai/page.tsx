@@ -8,6 +8,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useStore } from '@/lib/store';
+import { apiUrl } from '@/lib/api-url';
 import { computeInsights, insightsBanner, type ActivityRecord } from '@/lib/services/activity-insights';
 
 type Session = { day: string; type: string; duration_min: number; description: string };
@@ -112,7 +113,7 @@ export default function CoachAIPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) throw new Error('Tu dois être connecté pour utiliser le Coach IA.');
-      const r = await fetch('/api/coach/ai', {
+      const r = await fetch(apiUrl('/api/coach/ai'), {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

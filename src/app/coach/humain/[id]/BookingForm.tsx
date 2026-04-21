@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 type Props = { coachId: string; coachName: string; sport: string };
 
@@ -18,7 +19,7 @@ export function BookingForm({ coachId, coachName, sport }: Props) {
     setStatus('sending');
     setMessage('');
     try {
-      const res = await fetch('/api/waitlist', {
+      const res = await fetch(apiUrl('/api/waitlist'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

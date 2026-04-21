@@ -1,4 +1,5 @@
 import { supabase } from './client';
+import { apiUrl } from '@/lib/api-url';
 
 // Types matching the database schema
 export interface Spot {
@@ -249,7 +250,7 @@ export async function getUserStats(userId: string) {
 
 /** Add email to waitlist (calls the API route) */
 export async function joinWaitlist(email: string, feature: string, locale: string = 'fr') {
-  const res = await fetch('/api/waitlist', {
+  const res = await fetch(apiUrl('/api/waitlist'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, feature, locale }),

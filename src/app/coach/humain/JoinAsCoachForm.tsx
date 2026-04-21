@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 export function JoinAsCoachForm() {
   const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ export function JoinAsCoachForm() {
     setStatus('sending');
     setMessage('');
     try {
-      const res = await fetch('/api/waitlist', {
+      const res = await fetch(apiUrl('/api/waitlist'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

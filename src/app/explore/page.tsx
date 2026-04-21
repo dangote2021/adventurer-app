@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { apiUrl } from '@/lib/api-url';
 
 type Spot = {
   id: string;
@@ -83,7 +84,7 @@ export default function ExplorePage() {
     // Scroll detail card into view
     setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     const ctl = new AbortController();
-    fetch(`/api/weather?lat=${selected.lat}&lng=${selected.lng}&sport=${encodeURIComponent(selected.sport)}`, { signal: ctl.signal })
+    fetch(apiUrl(`/api/weather?lat=${selected.lat}&lng=${selected.lng}&sport=${encodeURIComponent(selected.sport)}`), { signal: ctl.signal })
       .then(r => r.json())
       .then(d => setWeather(d))
       .catch(() => { /* ignore aborts */ })

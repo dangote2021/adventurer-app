@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/api-url';
 
 type Ambassador = {
   id: string;
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/admin/stats?token=${encodeURIComponent(token)}`);
+        const res = await fetch(apiUrl(`/api/admin/stats?token=${encodeURIComponent(token)}`));
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
         if (!cancelled) {
