@@ -15,6 +15,37 @@ function isWaterSport(sport: string): boolean {
   return WATER_SPORTS.some(ws => sport.toLowerCase().includes(ws.toLowerCase()) || ws.toLowerCase().includes(sport.toLowerCase()));
 }
 
+/** B5 — détecte si une date tombe sur le prochain samedi ou dimanche (ou le week-end en cours) */
+function isThisWeekend(dateStr: string | undefined): boolean {
+  if (!dateStr) return false;
+  // Accepte formats ISO (YYYY-MM-DD) ou autre date valide
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) {
+    // Fallback : match sur mots-clés FR/EN si date non ISO
+    const low = dateStr.toLowerCase();
+    return low.includes('samedi') || low.includes('dimanche') || low.includes('saturday') || low.includes('sunday') || low.includes('week-end') || low.includes('weekend');
+  }
+  const now = new Date();
+  const day = now.getDay(); // 0 = dim, 1 = lun, ... 6 = sam
+  const daysUntilSat = (6 - day + 7) % 7; // 0 si aujourd'hui samedi
+  const sat = new Date(now);
+  sat.setHours(0, 0, 0, 0);
+  sat.setDate(now.getDate() + daysUntilSat);
+  const sun = new Date(sat);
+  sun.setDate(sat.getDate() + 1);
+  const endSun = new Date(sun);
+  endSun.setHours(23, 59, 59, 999);
+  // Week-end = du sam 00:00 au dim 23:59 (ou en cours si on y est)
+  if (day === 0 || day === 6) {
+    // Si on est déjà en week-end, plage = aujourd'hui + demain si sam
+    const start = new Date(now); start.setHours(0, 0, 0, 0);
+    const end = day === 6 ? new Date(sat.getTime() + 2 * 24 * 3600 * 1000 - 1) : new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return parsed >= start && parsed <= end;
+  }
+  return parsed >= sat && parsed <= endSun;
+}
+
 type CategoryFilter = 'spots' | 'defis' | 'communaute';
 
 type RankingCriterion = 'sorties' | 'dplus' | 'km' | 'hours' | 'speed';
@@ -78,6 +109,8 @@ export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('spots');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
+  // B5 — Filtre "Ce week-end" : un des premiers besoins terrain (samedi/dimanche uniquement).
+  const [weekendOnly, setWeekendOnly] = useState(false);
   const [rankingCriterion, setRankingCriterion] = useState<RankingCriterion>('sorties');
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -258,9 +291,11 @@ export default function ExplorePage() {
     return matchesSearch && matchesSport;
   });
 
-  // Filter défis (use live data)
+  // Filter défis (use live data) + B5 weekend filter
   const filteredDefis = liveEvents.filter((event) => {
-    return event.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesWeekend = !weekendOnly || isThisWeekend(event.date);
+    return matchesSearch && matchesWeekend;
   });
 
   // Filter teams (no Supabase equivalent yet, keep mock)
@@ -356,6 +391,18 @@ export default function ExplorePage() {
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition ${showCitySearch ? 'bg-white/15 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
           >
             <span>🏙️</span> {fr ? 'Chercher une ville' : 'Search city'}
+          </button>
+          {/* B5 — Filtre Ce week-end : bascule défis sam/dim uniquement */}
+          <button
+            type="button"
+            onClick={() => {
+              setWeekendOnly(v => !v);
+              if (!weekendOnly) setActiveCategory('defis');
+            }}
+            aria-pressed={weekendOnly}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition ${weekendOnly ? 'bg-[#F77F00]/20 text-[#F77F00] ring-1 ring-[#F77F00]/40' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+          >
+            <span>🗓️</span> {fr ? 'Ce week-end' : 'This weekend'}
           </button>
         </div>
 

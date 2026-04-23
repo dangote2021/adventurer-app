@@ -98,6 +98,11 @@ export default function MarketplacePage() {
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
   const [items, setItems] = useState<Item[]>(FALLBACK_ITEMS);
   const [loading, setLoading] = useState(true);
+  // C3 — filtres enrichis
+  const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,9 +111,15 @@ export default function MarketplacePage() {
         const data = await getMarketItems();
         if (!cancelled) {
           if (data.length > 0) {
-            setItems(data.map(mapMarketItemToItem));
+            const mapped = data.map(mapMarketItemToItem);
+            setItems(mapped);
+            // C3 — auto-calibrer le slider sur le prix max réel
+            const m = Math.max(...mapped.map(i => i.price));
+            setMaxPrice(m);
+          } else {
+            const m = Math.max(...FALLBACK_ITEMS.map(i => i.price));
+            setMaxPrice(m);
           }
-          // If empty, keep FALLBACK_ITEMS
         }
       } catch (err) {
         console.error('[MarketplacePage] fetch error:', err);
@@ -125,11 +136,30 @@ export default function MarketplacePage() {
     return unique;
   }, [items]);
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase());
-    const matchesSport = !selectedSport || item.sport === selectedSport;
-    return matchesSearch && matchesSport;
-  });
+  const conditions = useMemo(() => {
+    const unique = Array.from(new Set(items.map(i => i.condition)));
+    return unique;
+  }, [items]);
+
+  const maxItemPrice = useMemo(() => {
+    return items.length > 0 ? Math.max(...items.map(i => i.price)) : 1000;
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    const arr = items.filter(item => {
+      const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase());
+      const matchesSport = !selectedSport || item.sport === selectedSport;
+      const matchesCondition = !selectedCondition || item.condition === selectedCondition;
+      const matchesPrice = item.price <= maxPrice;
+      return matchesSearch && matchesSport && matchesCondition && matchesPrice;
+    });
+    if (sortBy === 'price-asc') arr.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-desc') arr.sort((a, b) => b.price - a.price);
+    // 'newest' = insertion order (default), no sort needed
+    return arr;
+  }, [items, search, selectedSport, selectedCondition, maxPrice, sortBy]);
+
+  const activeFiltersCount = (selectedCondition ? 1 : 0) + (maxPrice < maxItemPrice ? 1 : 0) + (sortBy !== 'newest' ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] max-w-[430px] mx-auto pb-8">
@@ -193,8 +223,19 @@ export default function MarketplacePage() {
               aria-label="Rechercher un article"
             />
 
-            {/* Sport filters */}
+            {/* Sport filters + advanced filter toggle */}
             <div className="flex gap-2 overflow-x-auto pb-2">
+              <button
+                type="button"
+                onClick={() => setShowFilters(s => !s)}
+                className={`relative px-3 py-1 rounded-full font-medium whitespace-nowrap transition text-[13px] ${activeFiltersCount > 0 ? 'bg-[var(--accent)] text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                aria-label={language === 'fr' ? 'Filtres avancés' : 'Advanced filters'}
+              >
+                ⚙️ {language === 'fr' ? 'Filtres' : 'Filters'}
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-[10px] font-bold">{activeFiltersCount}</span>
+                )}
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedSport(null)}
@@ -217,6 +258,101 @@ export default function MarketplacePage() {
                 </button>
               ))}
             </div>
+
+            {/* Advanced filters panel */}
+            {showFilters && (
+              <div className="bg-[var(--card)] rounded-2xl p-4 space-y-4 border border-white/5">
+                {/* Sort */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-2">
+                    {language === 'fr' ? 'Trier par' : 'Sort by'}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { id: 'newest', label: language === 'fr' ? 'Récents' : 'Newest' },
+                      { id: 'price-asc', label: language === 'fr' ? 'Prix ↑' : 'Price ↑' },
+                      { id: 'price-desc', label: language === 'fr' ? 'Prix ↓' : 'Price ↓' },
+                    ] as const).map(opt => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setSortBy(opt.id)}
+                        className={`py-2 rounded-lg text-xs font-medium transition ${sortBy === opt.id ? 'bg-[var(--accent)] text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Condition */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-2">
+                    {language === 'fr' ? 'État' : 'Condition'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCondition(null)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition ${!selectedCondition ? 'bg-[var(--accent)] text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}
+                    >
+                      {t('common.all', language)}
+                    </button>
+                    {conditions.map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setSelectedCondition(c)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition ${selectedCondition === c ? 'bg-[var(--accent)] text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price range */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                      {language === 'fr' ? 'Prix max' : 'Max price'}
+                    </p>
+                    <p className="text-sm font-bold text-[var(--accent)]">{maxPrice}€</p>
+                  </div>
+                  <input
+                    type="range"
+                    min={10}
+                    max={maxItemPrice}
+                    step={10}
+                    value={maxPrice}
+                    onChange={e => setMaxPrice(Number(e.target.value))}
+                    className="w-full accent-[var(--accent)]"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                    <span>10€</span>
+                    <span>{maxItemPrice}€</span>
+                  </div>
+                </div>
+
+                {/* Reset */}
+                {activeFiltersCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setMaxPrice(maxItemPrice); setSelectedCondition(null); setSortBy('newest'); }}
+                    className="w-full py-2 bg-white/5 text-gray-300 rounded-lg text-xs font-medium hover:bg-white/10 transition"
+                  >
+                    {language === 'fr' ? '✕ Réinitialiser les filtres' : '✕ Reset filters'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Active filters summary */}
+            {filteredItems.length > 0 && (search || selectedSport || activeFiltersCount > 0) && (
+              <p className="text-xs text-gray-400">
+                {filteredItems.length} {language === 'fr' ? (filteredItems.length > 1 ? 'articles trouvés' : 'article trouvé') : (filteredItems.length > 1 ? 'items found' : 'item found')}
+              </p>
+            )}
 
             {/* Item cards */}
             {loading ? (

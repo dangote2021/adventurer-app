@@ -7,7 +7,7 @@ import { SPORTS, UNIVERSE_CONFIG, getSportsByUniverse } from '@/lib/sports-confi
 import { Universe } from '@/types';
 import { getAdventuresForSwipe } from '@/lib/mock-data';
 
-type Step = 'sports' | 'level' | 'location' | 'discovery';
+type Step = 'sports' | 'vision' | 'level' | 'location' | 'discovery';
 type Level = 'debutant' | 'intermediaire' | 'confirme';
 
 const universes: Universe[] = ['TERRE', 'MER', 'AIR'];
@@ -22,7 +22,9 @@ export default function OnboardingScreen() {
   const [perSportLevels, setPerSportLevels] = useState<Record<string, Level>>({});
   const [geoLoading, setGeoLoading] = useState(false);
   const [discoveryReady, setDiscoveryReady] = useState(false);
+  const [visionSlide, setVisionSlide] = useState<0 | 1 | 2>(0);
   const touchStartX = useRef(0);
+  const visionTouchStartX = useRef(0);
 
   const currentIndex = universes.indexOf(currentUniverse);
   const config = UNIVERSE_CONFIG[currentUniverse];
@@ -97,11 +99,11 @@ export default function OnboardingScreen() {
 
   const personalizedAdventures = getAdventuresForSwipe(selected).slice(0, 3);
 
-  // Step progress indicator
-  const stepIndex = step === 'sports' ? 0 : step === 'level' ? 1 : step === 'location' ? 2 : 3;
+  // Step progress indicator (4 étapes : sports → vision → level → location)
+  const stepIndex = step === 'sports' ? 0 : step === 'vision' ? 1 : step === 'level' ? 2 : step === 'location' ? 3 : 4;
   const ProgressBar = () => (
     <div className="flex gap-1.5 px-4 pt-4 pb-2">
-      {[0, 1, 2].map(i => (
+      {[0, 1, 2, 3].map(i => (
         <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= stepIndex ? 'bg-[var(--accent)]' : 'bg-white/10'}`} />
       ))}
     </div>
@@ -214,6 +216,195 @@ export default function OnboardingScreen() {
             onClick={() => finishOnboarding()}
           >
             {language === 'fr' ? 'Passer cette étape' : 'Skip this step'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==== STEP 1.5: VISION (3 slides AVANT / PENDANT / APRÈS) ====
+  // B2 : avant de plonger dans les niveaux, on montre en 3 cartes ce qu'Adventurer
+  // apporte sur les 3 temps de l'aventure — c'est ce qui nous différencie (pas juste du tracking).
+  if (step === 'vision') {
+    const slides: Array<{
+      emoji: string;
+      tag: string;
+      tagFr: string;
+      title: string;
+      titleFr: string;
+      desc: string;
+      descFr: string;
+      bullets: Array<{ icon: string; fr: string; en: string }>;
+      gradient: string;
+    }> = [
+      {
+        emoji: '🗺️',
+        tag: 'BEFORE',
+        tagFr: 'AVANT',
+        title: 'Prepare your adventure',
+        titleFr: 'Prépare ton aventure',
+        desc: 'Inspiration, community, challenges, coaching and gear — in one place.',
+        descFr: 'Inspiration, communauté, défis, coaching et matos — au même endroit.',
+        bullets: [
+          { icon: '✨', fr: 'Coach IA perso selon ton objectif', en: 'AI coach tailored to your goal' },
+          { icon: '🤝', fr: 'Trouve des partenaires d\'aventure', en: 'Find adventure partners' },
+          { icon: '🎯', fr: 'Défis adaptés à ton niveau', en: 'Challenges matched to your level' },
+        ],
+        gradient: 'from-[#1B4332] to-[#2D6A4F]',
+      },
+      {
+        emoji: '🏔️',
+        tag: 'DURING',
+        tagFr: 'PENDANT',
+        title: 'Live your adventure',
+        titleFr: 'Vis ton aventure',
+        desc: 'Offline maps, GPS tracking, real-time weather and safety — even out of reach.',
+        descFr: 'Cartes offline, tracking GPS, météo live et sécurité — même hors réseau.',
+        bullets: [
+          { icon: '📡', fr: 'Tracker GPS précis, export GPX', en: 'Accurate GPS tracker, GPX export' },
+          { icon: '🗺️', fr: 'Cartes HD hors-ligne + POI terrain', en: 'HD offline maps + field POI' },
+          { icon: '🆘', fr: 'Check-in sécurité et SOS en 1 tap', en: '1-tap safety check-in & SOS' },
+        ],
+        gradient: 'from-[#023E8A] to-[#0077B6]',
+      },
+      {
+        emoji: '📸',
+        tag: 'AFTER',
+        tagFr: 'APRÈS',
+        title: 'Share your story',
+        titleFr: 'Valorise ton aventure',
+        desc: 'Auto recap, visual journal, badges that count and a community that cheers.',
+        descFr: 'Récap auto, carnet visuel, badges qui comptent et une communauté qui célèbre.',
+        bullets: [
+          { icon: '📖', fr: 'Carnet d\'aventure visuel + photos', en: 'Visual adventure journal + photos' },
+          { icon: '🏅', fr: 'Badges terrain (pas de XP bidon)', en: 'Real field badges (no fake XP)' },
+          { icon: '💬', fr: 'Partage avec tes proches & la team', en: 'Share with friends & your team' },
+        ],
+        gradient: 'from-[#F77F00] to-[#D65A1A]',
+      },
+    ];
+
+    const handleVisionTouchStart = (e: TouchEvent) => {
+      visionTouchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleVisionTouchEnd = (e: TouchEvent) => {
+      const diff = visionTouchStartX.current - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0 && visionSlide < 2) setVisionSlide((visionSlide + 1) as 0 | 1 | 2);
+        if (diff < 0 && visionSlide > 0) setVisionSlide((visionSlide - 1) as 0 | 1 | 2);
+      }
+    };
+
+    const slide = slides[visionSlide];
+    const isLast = visionSlide === 2;
+
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col max-w-[430px] mx-auto">
+        <ProgressBar />
+
+        {/* Header */}
+        <div className="px-4 pt-2 pb-3 text-center">
+          <h2 className="text-xl font-bold text-white">
+            {language === 'fr' ? 'Comment Adventurer t\'accompagne' : 'How Adventurer supports you'}
+          </h2>
+          <p className="text-gray-400 mt-1 text-xs">
+            {language === 'fr' ? 'Les 3 temps de ton aventure outdoor' : 'The 3 stages of your outdoor adventure'}
+          </p>
+        </div>
+
+        {/* Slide */}
+        <div
+          className="flex-1 px-4 pb-28 overflow-y-auto"
+          onTouchStart={handleVisionTouchStart}
+          onTouchEnd={handleVisionTouchEnd}
+        >
+          <div className="relative">
+            <div className={`bg-gradient-to-br ${slide.gradient} rounded-3xl p-6 text-white shadow-xl transition-all duration-300`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2 py-1 rounded-full">
+                  {language === 'fr' ? slide.tagFr : slide.tag}
+                </span>
+                <span className="text-[11px] text-white/70 font-medium">
+                  {visionSlide + 1} / 3
+                </span>
+              </div>
+              <div className="text-6xl mb-4">{slide.emoji}</div>
+              <h3 className="text-2xl font-black mb-2 leading-tight">
+                {language === 'fr' ? slide.titleFr : slide.title}
+              </h3>
+              <p className="text-sm text-white/85 leading-relaxed mb-5">
+                {language === 'fr' ? slide.descFr : slide.desc}
+              </p>
+              <div className="space-y-2">
+                {slide.bullets.map((b, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <span className="shrink-0">{b.icon}</span>
+                    <span className="text-white/90 leading-relaxed">
+                      {language === 'fr' ? b.fr : b.en}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Arrow hints */}
+            <div className="flex justify-between mt-4 px-1 text-xs text-gray-500">
+              <button
+                type="button"
+                onClick={() => visionSlide > 0 && setVisionSlide((visionSlide - 1) as 0 | 1 | 2)}
+                disabled={visionSlide === 0}
+                className={`transition ${visionSlide === 0 ? 'opacity-0' : 'hover:text-white'}`}
+              >
+                ← {language === 'fr' ? slides[Math.max(visionSlide - 1, 0)].tagFr : slides[Math.max(visionSlide - 1, 0)].tag}
+              </button>
+              <button
+                type="button"
+                onClick={() => visionSlide < 2 && setVisionSlide((visionSlide + 1) as 0 | 1 | 2)}
+                disabled={visionSlide === 2}
+                className={`transition ${visionSlide === 2 ? 'opacity-0' : 'hover:text-white'}`}
+              >
+                {language === 'fr' ? slides[Math.min(visionSlide + 1, 2)].tagFr : slides[Math.min(visionSlide + 1, 2)].tag} →
+              </button>
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mt-3">
+              {[0, 1, 2].map(i => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setVisionSlide(i as 0 | 1 | 2)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    visionSlide === i ? 'w-8 bg-[var(--accent)]' : 'w-1.5 bg-gray-600 hover:bg-gray-500'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Bottom CTA */}
+        <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto p-4 bg-[var(--bg)]/95 backdrop-blur-sm border-t border-white/5">
+          <button
+            type="button"
+            className="w-full py-3.5 rounded-xl font-bold text-lg transition shadow-lg bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] hover:opacity-90 shadow-[#F77F00]/20"
+            onClick={() => {
+              if (isLast) setStep('level');
+              else setVisionSlide((visionSlide + 1) as 0 | 1 | 2);
+            }}
+          >
+            {isLast
+              ? (language === 'fr' ? 'Définir mon niveau →' : 'Set my level →')
+              : (language === 'fr' ? 'Suivant' : 'Next')}
+          </button>
+          <button
+            type="button"
+            className="w-full py-2 text-gray-500 hover:text-gray-300 text-sm mt-2 transition"
+            onClick={() => setStep('level')}
+          >
+            {language === 'fr' ? 'Passer' : 'Skip'}
           </button>
         </div>
       </div>
@@ -444,7 +635,7 @@ export default function OnboardingScreen() {
               ? 'bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] hover:opacity-90 shadow-[#F77F00]/20'
               : 'bg-gray-800 text-gray-500 cursor-not-allowed shadow-none'
           }`}
-          onClick={() => selected.length > 0 ? setStep('level') : undefined}
+          onClick={() => selected.length > 0 ? setStep('vision') : undefined}
         >
           {selected.length > 0
             ? `${t('onboarding.continue', language)} — ${selected.length} ${selected.length === 1 ? t('onboarding.activities', language) : t('onboarding.activitiesPlural', language)} ${language === 'fr' ? 'sélectionnées' : 'selected'}`

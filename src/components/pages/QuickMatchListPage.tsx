@@ -56,7 +56,10 @@ export default function QuickMatchListPage() {
     <div className="min-h-screen bg-[var(--bg)] max-w-[430px] mx-auto pb-8">
       <div className="sticky top-0 z-40 bg-[var(--bg)]/95 backdrop-blur-sm px-4 py-3 flex items-center gap-3 border-b border-white/5">
         <button type="button" onClick={closeSubPage} className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition" aria-label={t('common.back', language)}>←</button>
-        <h2 className="font-semibold text-base">🤝 {t('qm.allMatches', language)}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold text-base">🤝 {t('qm.allMatches', language)}</h2>
+          <span className="text-[8px] font-black tracking-widest bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] px-1.5 py-0.5 rounded-full shadow-sm">BETA</span>
+        </div>
       </div>
       <div className="px-4 py-4 space-y-3">
         {active.length === 0 && (

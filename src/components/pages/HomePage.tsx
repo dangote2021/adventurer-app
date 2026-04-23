@@ -16,6 +16,7 @@ import {
 } from '@/lib/mock-data';
 import { getSportEmoji } from '@/lib/sports-config';
 import CreateChallengeModal from '@/components/ui/CreateChallengeModal';
+import { SafetyCheckInModal } from '@/components/modals/V2Modals';
 import {
   getSpots,
   getEvents,
@@ -28,9 +29,10 @@ import {
 } from '@/lib/supabase/queries';
 
 export default function HomePage() {
-  const { userName, selectedSports, setSubPage, showToast, language, dismissedAdventures, dismissedEvents, dismissAdventure, dismissEvent, togglePlannedAdventure, isAdventurePlanned, togglePlannedChallenge, isChallengePlanned, userLat, userLng, streakWeeks, tickStreak, monthlyGoal, monthlyProgress, monthlyGoalMonth, bumpMonthlyProgress, setMonthlyGoal, weeklyGoal, weeklyProgress, weeklyGoalWeek, inAppNotifications, lastActivitySummary, setLastActivitySummary, socialFeedLikes, toggleSocialLike, leagueLevel, leagueRank, leagueXP, streakFreezes, earnedBadges, isPremium, sponsoredChallengesJoined, joinSponsoredChallenge, isSponsoredChallengeJoined, userChallenges, joinUserChallenge, leaveUserChallenge } = useStore();
+  const { userName, selectedSports, setSubPage, showToast, language, dismissedAdventures, dismissedEvents, dismissAdventure, dismissEvent, togglePlannedAdventure, isAdventurePlanned, togglePlannedChallenge, isChallengePlanned, userLat, userLng, streakWeeks, tickStreak, monthlyGoal, monthlyProgress, monthlyGoalMonth, bumpMonthlyProgress, setMonthlyGoal, weeklyGoal, weeklyProgress, weeklyGoalWeek, inAppNotifications, lastActivitySummary, setLastActivitySummary, socialFeedLikes, toggleSocialLike, leagueLevel, leagueRank, leagueXP, streakFreezes, earnedBadges, isPremium, sponsoredChallengesJoined, joinSponsoredChallenge, isSponsoredChallengeJoined, userChallenges, joinUserChallenge, leaveUserChallenge, safetyCheckIns, defaultEmergencyContact, defaultEmergencyPhone, quickSafetyCheckIn, completeSafetyCheckIn, toggleActivityIntent, getIntentsFor, isUserIntending } = useStore();
 
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
 
   // Tick streak on page load (once per week)
   useEffect(() => { tickStreak(); }, []);
@@ -280,6 +282,40 @@ export default function HomePage() {
           <p className="text-base sm:text-lg text-green-100">
             {heroTemp}°C · {heroWeatherIcon} {t('hero.weather', language)} · {heroCity}
           </p>
+          {/* B6 — "Où suis-je ?" : bouton proéminent vers la carte géolocalisée.
+              C'est LE besoin terrain n°1 : ouvrir l'app, voir où on est, ce qu'il y a autour. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!userLat || !userLng) {
+                if ('geolocation' in navigator) {
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      useStore.getState().setUserLocation(pos.coords.latitude, pos.coords.longitude);
+                      useStore.getState().setGeoPermission('granted');
+                      useStore.getState().setPage('map');
+                    },
+                    () => {
+                      useStore.getState().setGeoPermission('denied');
+                      showToast(language === 'fr' ? 'Active ta géoloc dans les réglages' : 'Enable geoloc in settings', 'warning', '📍');
+                      useStore.getState().setPage('map');
+                    },
+                    { timeout: 8000 }
+                  );
+                } else {
+                  useStore.getState().setPage('map');
+                }
+              } else {
+                useStore.getState().setPage('map');
+              }
+            }}
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full border border-white/30 text-white text-sm font-bold transition shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={language === 'fr' ? 'Voir ma position sur la carte' : 'Show my location on the map'}
+          >
+            <span className="text-base">📍</span>
+            <span>{language === 'fr' ? 'Où suis-je ?' : 'Where am I?'}</span>
+            <span className="text-white/70">→</span>
+          </button>
           {/* Streak badge */}
           {streakWeeks > 0 && (
             <div className="mt-3 flex items-center gap-2">
@@ -415,32 +451,111 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* SPOT DE LA SEMAINE */}
-      {spotOfWeek && (
-        <section className="px-4 sm:px-6 pb-4">
-          <button
-            type="button"
-            onClick={() => setSubPage({ type: 'trail-detail', trailId: spotOfWeek.id })}
-            className="w-full bg-gradient-to-r from-[#2D6A4F]/40 to-[#1B4332]/40 border border-[#2D6A4F]/30 rounded-2xl p-4 text-left hover:border-[var(--accent)]/40 transition"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">{spotOfWeek.emoji}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-wide text-[var(--accent)] font-bold mb-0.5">
-                  {language === 'fr' ? '⭐ Spot de la semaine' : '⭐ Spot of the week'}
-                </p>
-                <p className="font-bold text-sm text-white truncate">{spotOfWeek.name}</p>
-                <p className="text-xs text-gray-400 truncate">{spotOfWeek.description} · ⭐ {spotOfWeek.rating}</p>
+      {/* SPOT DE LA SEMAINE + C1 "Qui y va ce week-end ?" */}
+      {spotOfWeek && (() => {
+        const intents = getIntentsFor('spot', spotOfWeek.id);
+        const imGoing = isUserIntending('spot', spotOfWeek.id);
+        return (
+          <section className="px-4 sm:px-6 pb-4">
+            <div className="w-full bg-gradient-to-r from-[#2D6A4F]/40 to-[#1B4332]/40 border border-[#2D6A4F]/30 rounded-2xl p-4">
+              <button
+                type="button"
+                onClick={() => setSubPage({ type: 'trail-detail', trailId: spotOfWeek.id })}
+                className="w-full flex items-center gap-3 text-left hover:opacity-90 transition"
+              >
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">{spotOfWeek.emoji}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-[var(--accent)] font-bold mb-0.5">
+                    {language === 'fr' ? '⭐ Spot de la semaine' : '⭐ Spot of the week'}
+                  </p>
+                  <p className="font-bold text-sm text-white truncate">{spotOfWeek.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{spotOfWeek.description} · ⭐ {spotOfWeek.rating}</p>
+                </div>
+                <span className="text-gray-500 text-lg">→</span>
+              </button>
+              {/* C1 — activity intent CTA */}
+              <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0 text-xs">
+                  {intents.length > 0 ? (
+                    <p className="text-gray-300">
+                      <span className="font-semibold text-emerald-300">{intents.length}</span>{' '}
+                      {language === 'fr'
+                        ? (intents.length > 1 ? 'personnes prévoient d\'y aller ce week-end' : 'personne prévoit d\'y aller ce week-end')
+                        : (intents.length > 1 ? 'people plan to go this weekend' : 'person plans to go this weekend')}
+                    </p>
+                  ) : (
+                    <p className="text-gray-400">
+                      {language === 'fr' ? 'Qui y va ce week-end ?' : 'Who\'s going this weekend?'}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nowGoing = toggleActivityIntent({
+                      targetType: 'spot',
+                      targetId: spotOfWeek.id,
+                      targetTitle: spotOfWeek.name,
+                      sport: spotOfWeek.sport,
+                    });
+                    showToast(
+                      nowGoing
+                        ? (language === 'fr' ? 'Super, ton intention est visible 👍' : 'Great, your intent is visible 👍')
+                        : (language === 'fr' ? 'Intention retirée' : 'Intent removed'),
+                      nowGoing ? 'success' : 'info',
+                      nowGoing ? '✅' : '↩️'
+                    );
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${imGoing ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                >
+                  {imGoing
+                    ? (language === 'fr' ? '✓ J\'y vais' : '✓ I\'m going')
+                    : (language === 'fr' ? 'J\'y vais' : 'I\'m going')}
+                </button>
               </div>
-              <span className="text-gray-500 text-lg">→</span>
             </div>
-          </button>
+          </section>
+        );
+      })()}
+
+      {/* C2 — ACTIVE SAFETY CHECK-INS (compact banner, only if any active) */}
+      {safetyCheckIns.filter(c => c.status === 'active').length > 0 && (
+        <section className="px-4 sm:px-6 pt-3">
+          {safetyCheckIns.filter(c => c.status === 'active').slice(0, 2).map(c => {
+            const back = new Date(c.expectedReturnAt);
+            const hh = back.getHours().toString().padStart(2, '0');
+            const mm = back.getMinutes().toString().padStart(2, '0');
+            return (
+              <div key={c.id} className="bg-emerald-900/30 border border-emerald-600/40 rounded-2xl p-3 flex items-center gap-3 mb-2">
+                <span className="text-2xl">🛡️</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-emerald-300">
+                    {language === 'fr' ? 'Check-in actif' : 'Active check-in'} · {c.sport}
+                  </p>
+                  <p className="text-[11px] text-emerald-200/70 truncate">
+                    {language === 'fr' ? 'Retour prévu' : 'Back by'} {hh}:{mm} · {c.emergencyContact}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    completeSafetyCheckIn(c.id);
+                    showToast(language === 'fr' ? 'Bon retour ! 🙏' : 'Welcome back! 🙏', 'success', '✅');
+                  }}
+                  className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-500 transition"
+                >
+                  ✅ {language === 'fr' ? 'Rentré' : "I'm back"}
+                </button>
+              </div>
+            );
+          })}
         </section>
       )}
 
-      {/* SHORTCUTS — lean row: Plans, RDV, Quick Match */}
+      {/* SHORTCUTS — lean row: Plans, RDV, Quick Match, Safety */}
       <section className="px-4 sm:px-6 pt-2 pb-1">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <button type="button" onClick={() => setSubPage('my-plans')}
             className="flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-[var(--card)] hover:bg-white/10 transition">
             <span className="text-2xl">📋</span>
@@ -452,9 +567,40 @@ export default function HomePage() {
             <span className="text-[11px] font-semibold text-center leading-tight">{language === 'fr' ? 'Mes RDV' : 'Bookings'}</span>
           </button>
           <button type="button" onClick={() => setSubPage('quick-match-list')}
-            className="flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-[var(--card)] hover:bg-white/10 transition">
+            className="relative flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-[var(--card)] hover:bg-white/10 transition">
+            <span className="absolute top-1 right-1 text-[8px] font-black tracking-widest bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] px-1.5 py-0.5 rounded-full shadow-sm">BETA</span>
             <span className="text-2xl">🤝</span>
             <span className="text-[11px] font-semibold text-center leading-tight">Quick Match</span>
+          </button>
+          {/* C2 — Check-in sécurité 1-tap */}
+          <button
+            type="button"
+            onClick={() => {
+              if (defaultEmergencyContact && defaultEmergencyPhone) {
+                // 1 tap: réutilise le contact mémorisé, 5h par défaut
+                const routeLabel = heroCity || (language === 'fr' ? 'Sortie' : 'Outing');
+                const sportLabel = selectedSports[0] || 'Outdoor';
+                const id = quickSafetyCheckIn(routeLabel, sportLabel, 5);
+                if (id) {
+                  showToast(
+                    language === 'fr'
+                      ? `Check-in activé 5h · ${defaultEmergencyContact} prévenu·e`
+                      : `Check-in on 5h · ${defaultEmergencyContact} alerted`,
+                    'success',
+                    '🛡️'
+                  );
+                }
+              } else {
+                // Premier check-in: ouvre le modal complet pour saisir le contact
+                setShowSafetyModal(true);
+              }
+            }}
+            className="relative flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-emerald-900/30 border border-emerald-600/30 hover:bg-emerald-800/30 transition"
+          >
+            <span className="text-2xl">🛡️</span>
+            <span className="text-[11px] font-semibold text-center leading-tight text-emerald-200">
+              {language === 'fr' ? 'Check-in' : 'Check-in'}
+            </span>
           </button>
         </div>
       </section>
@@ -845,6 +991,13 @@ export default function HomePage() {
 
       {/* Create Challenge Modal */}
       {showCreateChallenge && <CreateChallengeModal onClose={() => setShowCreateChallenge(false)} />}
+      {showSafetyModal && (
+        <SafetyCheckInModal
+          routeTitle={heroCity || (language === 'fr' ? 'Sortie' : 'Outing')}
+          sport={selectedSports[0] || 'Outdoor'}
+          onClose={() => setShowSafetyModal(false)}
+        />
+      )}
 
       {/* P2: Coaches, Plans, Gear moved to Explorer page — feed is now focused on retention */}
 

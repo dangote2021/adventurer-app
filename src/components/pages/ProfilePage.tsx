@@ -936,7 +936,10 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">📡</span>
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{language === 'fr' ? 'Tracker GPS' : 'GPS Tracker'}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-medium text-sm">{language === 'fr' ? 'Tracker GPS' : 'GPS Tracker'}</p>
+                    <span className="text-[8px] font-black tracking-widest bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] px-1.5 py-0.5 rounded-full shadow-sm">BETA</span>
+                  </div>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {language === 'fr' ? 'Enregistre ta trace, exporte en GPX, ajoute à ton carnet.' : 'Record your track, export GPX, save to your logbook.'}
                   </p>

@@ -127,7 +127,10 @@ export default function TrackingPage() {
           ←
         </button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-[#1B4332]">📡 Tracker GPS</h1>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-lg font-bold text-[#1B4332]">📡 Tracker GPS</h1>
+            <span className="text-[8px] font-black tracking-widest bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] px-1.5 py-0.5 rounded-full shadow-sm">BETA</span>
+          </div>
           <p className="text-xs text-gray-500">Enregistre ta trace, exporte en GPX</p>
         </div>
         <div className="text-xs text-gray-600">{accuracyLabel}</div>

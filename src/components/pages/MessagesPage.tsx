@@ -56,7 +56,12 @@ const t = (key: string, language: string = 'fr', params?: Record<string, string>
 };
 
 export default function MessagesPage({ conversationId }: MessagesPageProps) {
-  const { closeSubPage, setSubPage, showToast, language, marketplaceThreads } = useStore();
+  const { closeSubPage, setSubPage, showToast, language, marketplaceThreads, activityLog } = useStore();
+  // B1 — Messages activity-centric : on ne montre les conversations démo
+  // QUE si l'utilisateur a déjà une activité ou des threads marketplace (= contexte social réel).
+  // Sinon on évite un feed de faux messages qui fait app morte au premier lancement.
+  const hasActivityContext = marketplaceThreads.length > 0 || activityLog.length > 0;
+  const showDemoConversations = hasActivityContext;
   const [activeConv, setActiveConv] = useState(conversationId || null);
   const [input, setInput] = useState('');
   const [localMessages, setLocalMessages] = useState<Array<{id:string;from:string;content:string;time:string;isMe:boolean;isAuto?:boolean}>>([]);
@@ -185,10 +190,10 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
             + {t('messages.new', language)}
           </button>
         </div>
-        {/* Marketplace conversations */}
+        {/* Marketplace conversations — liées à tes annonces */}
         {marketplaceThreads.length > 0 && (
           <div className="mb-4">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-2 px-1">🛍️ Marketplace</p>
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-2 px-1">🛍️ {language === 'fr' ? 'Marketplace — liées à tes annonces' : 'Marketplace — linked to your listings'}</p>
             <div className="space-y-1">
               {marketplaceThreads.map(thread => {
                 const last = thread.messages[thread.messages.length - 1];
@@ -261,30 +266,53 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
           </div>
         </div>
 
-        <div className="space-y-1">
-          {CONVERSATIONS.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-              onClick={() => setActiveConv(c.id)}
-              aria-label={`${t('messages.group', language)}: ${c.participantName}${c.unread > 0 ? `, ${t('messages.notRead', language, { count: c.unread.toString() })}` : ''}`}
-            >
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-[var(--card)] flex items-center justify-center text-2xl">{c.participantAvatar}</div>
-                {c.isGroup && <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center text-xs">👥</div>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-sm truncate">{c.participantName}</p>
-                  <span className="text-xs text-gray-500 shrink-0 ml-2">{c.lastMessageTime}</span>
-                </div>
-                <p className="text-sm text-gray-400 truncate">{c.lastMessage}</p>
-              </div>
-              {c.unread > 0 && <span className="w-5 h-5 bg-[var(--accent)] rounded-full text-xs text-white flex items-center justify-center font-bold shrink-0" aria-label={t('messages.notRead', language, { count: c.unread.toString() })}>{c.unread}</span>}
-            </button>
-          ))}
-        </div>
+        {/* Conversations communauté — masquées au premier lancement (pas de contexte) */}
+        {showDemoConversations && (
+          <>
+            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-2 px-1">
+              🤝 {language === 'fr' ? 'Communauté outdoor' : 'Outdoor community'}
+            </p>
+            <div className="space-y-1">
+              {CONVERSATIONS.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  onClick={() => setActiveConv(c.id)}
+                  aria-label={`${t('messages.group', language)}: ${c.participantName}${c.unread > 0 ? `, ${t('messages.notRead', language, { count: c.unread.toString() })}` : ''}`}
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-[var(--card)] flex items-center justify-center text-2xl">{c.participantAvatar}</div>
+                    {c.isGroup && <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center text-xs">👥</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm truncate">{c.participantName}</p>
+                      <span className="text-xs text-gray-500 shrink-0 ml-2">{c.lastMessageTime}</span>
+                    </div>
+                    <p className="text-sm text-gray-400 truncate">{c.lastMessage}</p>
+                  </div>
+                  {c.unread > 0 && <span className="w-5 h-5 bg-[var(--accent)] rounded-full text-xs text-white flex items-center justify-center font-bold shrink-0" aria-label={t('messages.notRead', language, { count: c.unread.toString() })}>{c.unread}</span>}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Empty state : personne n'a encore écrit */}
+        {!showDemoConversations && marketplaceThreads.length === 0 && (
+          <div className="text-center py-10 px-4 text-gray-400">
+            <p className="text-5xl mb-3">💬</p>
+            <p className="text-sm font-medium text-white mb-2">
+              {language === 'fr' ? 'Aucun message pour l\'instant' : 'No messages yet'}
+            </p>
+            <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+              {language === 'fr'
+                ? 'Les conversations apparaissent quand tu contactes un coach, rejoins un défi ou échanges sur une annonce du marketplace.'
+                : 'Conversations show up when you reach out to a coach, join a challenge or chat on a marketplace listing.'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -8,12 +8,88 @@ interface AIPlan {
   overview: string;
   phases: Array<{ name: string; duration: string; description: string; sessions: string[] }>;
   tips: string[];
+  detected?: PromptMeta;
 }
 
 type Level = 'debutant' | 'intermediaire' | 'confirme';
 
+// B3 — Parsing du prompt pour extraire les paramètres clés (durée, volume, objectif).
+// Ça permet à l'IA de montrer qu'elle a lu et compris ce que l'utilisateur a écrit,
+// et d'adapter le plan (nombre de semaines, intensité, distance cible).
+interface PromptMeta {
+  weeks?: number;          // durée totale du plan
+  hoursPerWeek?: number;   // volume horaire
+  kmPerWeek?: number;      // volume kilométrique actuel ou visé
+  targetKm?: number;       // distance de la course/objectif
+  targetDepth?: number;    // profondeur visée (plongée/apnée)
+  targetMinutes?: number;  // durée d'apnée visée en min
+  goal?: string;           // mot-clé objectif (trail, kite, apnee, …)
+  when?: string;           // mois ou échéance détectée ("septembre", "dans 3 mois")
+}
+
+function parsePrompt(prompt: string): PromptMeta {
+  const lower = prompt.toLowerCase();
+  const meta: PromptMeta = {};
+
+  // Durée : "12 semaines", "en 3 mois", "dans 4 mois"
+  const weeksMatch = lower.match(/(\d{1,3})\s*(semaines?|sem\.|sem\b|weeks?)/);
+  if (weeksMatch) meta.weeks = parseInt(weeksMatch[1], 10);
+  const monthsMatch = lower.match(/(\d{1,2})\s*(mois|months?)/);
+  if (monthsMatch && !meta.weeks) meta.weeks = parseInt(monthsMatch[1], 10) * 4;
+
+  // Volume horaire : "4h/sem", "5 heures par semaine", "3h semaine"
+  const hoursMatch = lower.match(/(\d{1,2})\s*(?:h|heures?|hrs?)\s*(?:\/|par|\s)?\s*(?:sem|semaines?|week)/);
+  if (hoursMatch) meta.hoursPerWeek = parseInt(hoursMatch[1], 10);
+
+  // Volume kilométrique : "30 km/sem", "50 km par semaine"
+  const kmWeekMatch = lower.match(/(\d{1,3})\s*km\s*(?:\/|par|\s)?\s*(?:sem|semaines?|week)/);
+  if (kmWeekMatch) meta.kmPerWeek = parseInt(kmWeekMatch[1], 10);
+
+  // Distance cible : "ultra-trail de 80km", "un 50 km", "un 100km"
+  const targetKmMatch = lower.match(/(?:de|d'un|un|course de|trail de|course)\s+(\d{1,3})\s*km/);
+  if (targetKmMatch) meta.targetKm = parseInt(targetKmMatch[1], 10);
+
+  // Profondeur visée (plongée/apnée) : "atteindre -30m", "plonger à 25m"
+  const depthMatch = lower.match(/[-−]?(\d{1,3})\s*m(?:ètres?)?\b/);
+  if (depthMatch && (lower.includes('profondeur') || lower.includes('plongée') || lower.includes('plonger') || lower.includes('apnée') && lower.includes('prof'))) {
+    meta.targetDepth = parseInt(depthMatch[1], 10);
+  }
+
+  // Apnée statique : "3min30", "3 min 30", "passer à 3min"
+  const minSecMatch = lower.match(/(\d{1,2})\s*min\s*(\d{1,2})?/);
+  if (minSecMatch && (lower.includes('apnée') || lower.includes('apnee') || lower.includes('statique') || lower.includes('freedive'))) {
+    const min = parseInt(minSecMatch[1], 10);
+    const sec = minSecMatch[2] ? parseInt(minSecMatch[2], 10) : 0;
+    meta.targetMinutes = Math.round((min + sec / 60) * 10) / 10;
+  }
+
+  // Échéance : mois ("en septembre", "en mai")
+  const monthKeywords = ['janvier', 'février', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'aout', 'septembre', 'octobre', 'novembre', 'décembre', 'decembre', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  for (const m of monthKeywords) {
+    if (lower.includes(m)) { meta.when = m; break; }
+  }
+
+  // Objectif
+  if (lower.includes('ultra') || lower.includes('utmb')) meta.goal = 'ultra-trail';
+  else if (lower.includes('trail')) meta.goal = 'trail';
+  else if (lower.includes('marathon')) meta.goal = 'marathon';
+  else if (lower.includes('kite') || lower.includes('foil') || lower.includes('wing')) meta.goal = 'kitesurf';
+  else if (lower.includes('surf') && !lower.includes('kitesurf')) meta.goal = 'surf';
+  else if (lower.includes('apnée') || lower.includes('apnee') || lower.includes('freedive')) meta.goal = 'apnée';
+  else if (lower.includes('plongée') || lower.includes('plongee') || lower.includes('diving')) meta.goal = 'plongée';
+  else if (lower.includes('escalade') || lower.includes('grimpe') || lower.includes('bloc')) meta.goal = 'escalade';
+  else if (lower.includes('alpinisme') || lower.includes('mont-blanc') || lower.includes('mont blanc')) meta.goal = 'alpinisme';
+  else if (lower.includes('parapente') || lower.includes('cross')) meta.goal = 'parapente';
+  else if (lower.includes('ski de rando') || lower.includes('ski de randonnée')) meta.goal = 'ski-rando';
+  else if (lower.includes('vélo') || lower.includes('velo') || lower.includes('cyclisme') || lower.includes('bike')) meta.goal = 'vélo';
+  else if (lower.includes('rando') || lower.includes('trek') || lower.includes('hike')) meta.goal = 'randonnée';
+
+  return meta;
+}
+
 function generateAIResponse(prompt: string, sports: string[], sportLevels: Record<string, Level>): AIPlan {
   const lower = prompt.toLowerCase();
+  const detected = parsePrompt(prompt);
   // Detect user's main level for this sport family (fallback = intermediaire)
   const pickLevel = (candidates: string[]): Level => {
     for (const s of candidates) {
@@ -21,14 +97,29 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
     }
     return 'intermediaire';
   };
+  // B3 : phrase qui récapitule ce que l'IA a compris du prompt
+  const echoPrompt = (): string => {
+    const parts: string[] = [];
+    if (detected.weeks) parts.push(`${detected.weeks} sem`);
+    if (detected.hoursPerWeek) parts.push(`${detected.hoursPerWeek}h/sem`);
+    if (detected.kmPerWeek) parts.push(`${detected.kmPerWeek}km/sem actuel`);
+    if (detected.targetKm) parts.push(`objectif ${detected.targetKm}km`);
+    if (detected.targetMinutes) parts.push(`viser ${detected.targetMinutes}min`);
+    if (detected.targetDepth) parts.push(`profondeur ${detected.targetDepth}m`);
+    if (detected.when) parts.push(`échéance ${detected.when}`);
+    return parts.length > 0 ? ` · J'ai noté : ${parts.join(' · ')}.` : '';
+  };
 
   // ===== APNÉE / FREEDIVE =====
   if (lower.includes('apnée') || lower.includes('apnee') || lower.includes('freedive') || lower.includes('statique')) {
     const level = pickLevel(['Apnée', 'Plongée']);
     if (level === 'debutant') {
       return {
-        title: 'Apnée — Démarrer en douceur (de 0 à 2min)',
-        overview: 'Programme de 6 semaines pour débuter. 2 séances/sem à sec + 1 à l\'eau si possible. Sécurité binôme obligatoire.',
+        detected,
+        title: detected.targetMinutes
+          ? `Apnée — Atteindre ${detected.targetMinutes}min en statique`
+          : 'Apnée — Démarrer en douceur (de 0 à 2min)',
+        overview: `Programme de ${detected.weeks || 6} semaines pour débuter. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '2 séances/sem'} à sec + 1 à l\'eau si possible. Sécurité binôme obligatoire.${echoPrompt()}`,
         phases: [
           { name: '🟢 Respiration (S1-S2)', duration: '2 semaines', description: 'Apprendre la respiration diaphragmatique et la ventilation finale', sessions: ['Respi abdominale 10min/j', 'Souplesse cage thoracique', 'Marche apnée expiratoire 30m', 'Étirements du dos'] },
           { name: '🟡 Tables CO2 douces (S3-S4)', duration: '2 semaines', description: 'Accoutumance au CO2 sans tension', sessions: ['Table CO2 : 1:30 / 2:00 repos → 1:00', 'Apnée statique sur canapé 1\'30 max', 'Sensations "envie de respirer"', 'Relaxation / cohérence cardiaque'] },
@@ -38,8 +129,11 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
       };
     }
     return {
-      title: 'Apnée — De 2min à 3min30 en 8 semaines',
-      overview: 'Progression ciblée tables CO2 puis O2, travail profondeur en parallèle. 3 séances/sem dont 1 à l\'eau, toujours en binôme.',
+      detected,
+      title: detected.targetMinutes
+        ? `Apnée — Atteindre ${detected.targetMinutes}min en statique (${detected.weeks || 8} sem)`
+        : `Apnée — De 2min à 3min30 en ${detected.weeks || 8} semaines`,
+      overview: `Progression ciblée tables CO2 puis O2, travail profondeur en parallèle. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '3 séances/sem'} dont 1 à l\'eau, toujours en binôme.${echoPrompt()}`,
       phases: [
         { name: '🟢 Base CO2 (S1-S2)', duration: '2 semaines', description: 'Tolérance au CO2 par tables progressives', sessions: ['Table CO2 : 2:00 / 2:00 repos → 1:15', 'Statique 2\'15 x 5 reps', 'Marche apnée 40m × 8', 'Stretching diaphragme'] },
         { name: '🟡 Tables O2 (S3-S5)', duration: '3 semaines', description: 'Allongement progressif de l\'apnée', sessions: ['Table O2 : 2:30 / 2\' repos', 'Statique max 1x/sem (3\'00 visé)', 'Dynamique 25m en piscine', 'Récupération yoga 1x/sem'] },
@@ -50,9 +144,14 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
   }
 
   if (lower.includes('trail') || lower.includes('ultra') || lower.includes('course')) {
+    const weeks = detected.weeks || 12;
+    const distance = detected.targetKm || 80;
     return {
-      title: 'Plan Trail / Ultra-Trail personnalisé',
-      overview: 'Programme de 12 semaines pour préparer un ultra-trail de 80km+. Basé sur 3-4 sorties/semaine avec montée en charge progressive.',
+      detected,
+      title: detected.targetKm
+        ? `Plan ${detected.goal === 'ultra-trail' ? 'Ultra-Trail' : 'Trail'} ${distance}km — ${weeks} sem`
+        : 'Plan Trail / Ultra-Trail personnalisé',
+      overview: `Programme de ${weeks} semaines pour préparer un ${detected.goal === 'ultra-trail' ? 'ultra-trail' : 'trail'} de ${distance}km+. Basé sur ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '3-4 sorties/semaine'} avec montée en charge progressive${detected.kmPerWeek ? ' depuis ton volume actuel (' + detected.kmPerWeek + 'km/sem)' : ''}.${echoPrompt()}`,
       phases: [
         { name: '🟢 Phase Base (S1-S4)', duration: '4 semaines', description: 'Construction de l\'endurance fondamentale', sessions: ['Sortie longue 2h en Z2', 'Fartlek 45min en nature', 'Rando-course 1h30 en montagne', 'Renforcement musculaire 30min'] },
         { name: '🟡 Phase Volume (S5-S8)', duration: '4 semaines', description: 'Augmentation du volume et du dénivelé', sessions: ['Sortie longue 3h avec 1000m D+', 'Intervalles côtes 1h', 'Enchaînement J+J 2x1h30', 'Yoga / Mobilité 45min'] },
@@ -64,9 +163,11 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
   }
 
   if (lower.includes('kite') || lower.includes('vent') || lower.includes('foil')) {
+    const weeks = detected.weeks || 8;
     return {
-      title: 'Progression Kitesurf / Kite Foil',
-      overview: 'Programme de 8 semaines pour progresser du niveau intermédiaire au freestyle. 2-3 sessions/semaine selon le vent.',
+      detected,
+      title: `Progression Kitesurf / Kite Foil — ${weeks} sem`,
+      overview: `Programme de ${weeks} semaines pour progresser du niveau intermédiaire au freestyle. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '2-3 sessions/semaine'} selon le vent.${echoPrompt()}`,
       phases: [
         { name: '🟢 Fondamentaux (S1-S2)', duration: '2 semaines', description: 'Maîtrise du contrôle de l\'aile et du board', sessions: ['Session technique : transitions', 'Travail du body drag upwind', 'Session waterstart des deux côtés'] },
         { name: '🟡 Sauts (S3-S5)', duration: '3 semaines', description: 'Premiers sauts et contrôle aérien', sessions: ['Pop et timing de saut', 'Backroll progressif', 'Grab en l\'air (indy, melon)'] },
@@ -77,9 +178,11 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
   }
 
   if (lower.includes('escalade') || lower.includes('grimpe') || lower.includes('bloc')) {
+    const weeks = detected.weeks || 10;
     return {
-      title: 'Objectif 7a en tête',
-      overview: 'Programme de 10 semaines combinant force, technique et mental pour passer le cap du 7a.',
+      detected,
+      title: `Objectif 7a en tête — ${weeks} sem`,
+      overview: `Programme de ${weeks} semaines combinant force, technique et mental pour passer le cap du 7a. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '3 séances/sem'}.${echoPrompt()}`,
       phases: [
         { name: '🟢 Force de base (S1-S3)', duration: '3 semaines', description: 'Renforcement des doigts et du haut du corps', sessions: ['Pan Güllich 3x/sem 30min', 'Bloc technique : dalles et dévers', 'Gainage et tractions', 'Étirements 20min'] },
         { name: '🟡 Volume (S4-S7)', duration: '4 semaines', description: 'Grimpe en quantité pour développer l\'endurance', sessions: ['Séance longue : 15-20 voies en 6b-6c', 'Travail conti : 4x traversées 5min', 'Bloc : essais en 6c-7a', 'Récup active (yoga)'] },
@@ -90,8 +193,9 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
   }
 
   return {
-    title: 'Plan d\'entraînement personnalisé',
-    overview: 'Programme adapté à votre objectif. Basé sur une progression douce avec écoute du corps.',
+    detected,
+    title: detected.weeks ? `Plan d'entraînement personnalisé — ${detected.weeks} sem` : 'Plan d\'entraînement personnalisé',
+    overview: `Programme adapté à votre objectif. Basé sur une progression douce avec écoute du corps.${echoPrompt()}`,
     phases: [
       { name: '🟢 Phase d\'adaptation (S1-S3)', duration: '3 semaines', description: 'Reprise progressive, construction des habitudes', sessions: ['3 sorties/sem de 45min à 1h', 'Intensité modérée (conversation possible)', 'Renforcement général 2x/sem'] },
       { name: '🟡 Phase de développement (S4-S8)', duration: '5 semaines', description: 'Montée en charge progressive', sessions: ['4 sorties/sem avec 1 sortie longue', '1 séance d\'intensité/sem', 'Renforcement spécifique'] },
@@ -263,6 +367,34 @@ export default function CoachAIPage() {
             <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
               <h3 className="text-lg font-bold text-[var(--accent)]">{plan.title}</h3>
               <p className="text-gray-300 text-sm">{plan.overview}</p>
+              {plan.detected && Object.keys(plan.detected).length > 0 && (
+                <div className="pt-2 flex flex-wrap gap-1.5">
+                  {plan.detected.weeks && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-medium">📅 {plan.detected.weeks} sem</span>
+                  )}
+                  {plan.detected.hoursPerWeek && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-medium">⏱ {plan.detected.hoursPerWeek}h/sem</span>
+                  )}
+                  {plan.detected.kmPerWeek && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-medium">🏃 {plan.detected.kmPerWeek} km/sem</span>
+                  )}
+                  {plan.detected.targetKm && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-medium">🎯 {plan.detected.targetKm} km</span>
+                  )}
+                  {plan.detected.targetMinutes && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-medium">🎯 {plan.detected.targetMinutes} min</span>
+                  )}
+                  {plan.detected.targetDepth && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-medium">🎯 -{plan.detected.targetDepth} m</span>
+                  )}
+                  {plan.detected.when && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-medium capitalize">📆 {plan.detected.when}</span>
+                  )}
+                  {plan.detected.goal && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300 font-medium capitalize">🏷 {plan.detected.goal}</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {plan.phases.map((phase, i) => (

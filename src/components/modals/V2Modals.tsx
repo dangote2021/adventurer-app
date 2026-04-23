@@ -96,7 +96,7 @@ export function QuickMatchModal({ spotTitle, spotId, sport, onClose }: {
 export function SafetyCheckInModal({ routeTitle, sport, onClose }: {
   routeTitle: string; sport: string; onClose: () => void;
 }) {
-  const { language, addSafetyCheckIn, showToast } = useStore();
+  const { language, addSafetyCheckIn, showToast, defaultEmergencyContact, defaultEmergencyPhone } = useStore();
   const [start, setStart] = useState(() => {
     const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0);
     return d.toISOString().slice(0, 16);
@@ -105,8 +105,9 @@ export function SafetyCheckInModal({ routeTitle, sport, onClose }: {
     const d = new Date(); d.setHours(d.getHours() + 5, 0, 0, 0);
     return d.toISOString().slice(0, 16);
   });
-  const [contact, setContact] = useState('');
-  const [phone, setPhone] = useState('');
+  // C2 — pré-remplir avec le contact sauvegardé pour le check-in en 1 tap
+  const [contact, setContact] = useState(defaultEmergencyContact || '');
+  const [phone, setPhone] = useState(defaultEmergencyPhone || '');
 
   const handleSubmit = () => {
     if (!contact.trim() || !phone.trim()) {

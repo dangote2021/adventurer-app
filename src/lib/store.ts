@@ -43,6 +43,19 @@ export interface QuickMatch {
   createdAt: string;
 }
 
+// C1 — Activity Intents: "Qui y va ce week-end ?" lightweight opt-in
+export interface ActivityIntent {
+  id: string;
+  targetType: 'spot' | 'event' | 'defi';
+  targetId: string | number;
+  targetTitle: string;
+  sport: string;
+  authorName: string;
+  // ISO date of planned visit (yyyy-mm-dd) — defaults to next weekend (saturday)
+  plannedDate: string;
+  createdAt: string;
+}
+
 export interface SafetyCheckIn {
   id: string;
   routeTitle: string;
@@ -158,6 +171,11 @@ interface AppState {
   savedPlans: SavedPlan[];
   quickMatches: QuickMatch[];
   safetyCheckIns: SafetyCheckIn[];
+  // C2 — Contact d'urgence persistant pour permettre un check-in 1-tap la prochaine fois
+  defaultEmergencyContact: string;
+  defaultEmergencyPhone: string;
+  // C1 — Intentions communautaires "Qui y va ce week-end ?"
+  activityIntents: ActivityIntent[];
   coachBookings: CoachBooking[];
   marketplaceThreads: MarketplaceThread[];
   routeReports: RouteReport[];
@@ -303,6 +321,13 @@ interface AppState {
   removeQuickMatch: (id: string) => void;
   addSafetyCheckIn: (c: Omit<SafetyCheckIn, 'id' | 'createdAt' | 'status'>) => string;
   completeSafetyCheckIn: (id: string) => void;
+  setDefaultEmergencyContact: (name: string, phone: string) => void;
+  // C2 — quick 1-tap check-in quand le contact par défaut est défini
+  quickSafetyCheckIn: (routeTitle: string, sport: string, durationHours?: number) => string | null;
+  // C1 — Activity intents API
+  toggleActivityIntent: (params: { targetType: 'spot' | 'event' | 'defi'; targetId: string | number; targetTitle: string; sport: string; plannedDate?: string }) => boolean;
+  getIntentsFor: (targetType: 'spot' | 'event' | 'defi', targetId: string | number) => ActivityIntent[];
+  isUserIntending: (targetType: 'spot' | 'event' | 'defi', targetId: string | number) => boolean;
   bookCoach: (b: Omit<CoachBooking, 'id' | 'createdAt' | 'status'>) => string;
   cancelBooking: (id: string) => void;
   openMarketplaceThread: (params: { itemId: string; itemTitle: string; itemPrice: number; sellerId: string; sellerName: string; buyerName: string; firstMessage: string }) => string;
@@ -406,6 +431,9 @@ export const useStore = create<AppState>()(
       savedPlans: [],
       quickMatches: [],
       safetyCheckIns: [],
+      defaultEmergencyContact: '',
+      defaultEmergencyPhone: '',
+      activityIntents: [],
       coachBookings: [],
       marketplaceThreads: [],
       routeReports: [],
@@ -602,15 +630,86 @@ export const useStore = create<AppState>()(
       },
       removeQuickMatch: (id) => set({ quickMatches: get().quickMatches.filter(m => m.id !== id) }),
 
+      setDefaultEmergencyContact: (name, phone) => {
+        set({ defaultEmergencyContact: name.trim(), defaultEmergencyPhone: phone.trim() });
+      },
+
+      quickSafetyCheckIn: (routeTitle, sport, durationHours = 5) => {
+        const s = get();
+        // Pas de contact par défaut → impossible en 1 tap, l'UI doit ouvrir le modal complet
+        if (!s.defaultEmergencyContact || !s.defaultEmergencyPhone) return null;
+        const id = 'safe-' + Date.now();
+        const now = new Date();
+        const back = new Date(now.getTime() + durationHours * 3600 * 1000);
+        const entry: SafetyCheckIn = {
+          id,
+          routeTitle,
+          sport,
+          startAt: now.toISOString(),
+          expectedReturnAt: back.toISOString(),
+          emergencyContact: s.defaultEmergencyContact,
+          emergencyPhone: s.defaultEmergencyPhone,
+          status: 'active',
+          createdAt: now.toISOString(),
+        };
+        set({ safetyCheckIns: [entry, ...s.safetyCheckIns] });
+        return id;
+      },
+
       addSafetyCheckIn: (c) => {
         const id = 'safe-' + Date.now();
         const entry: SafetyCheckIn = { ...c, id, createdAt: new Date().toISOString(), status: 'active' };
-        set({ safetyCheckIns: [entry, ...get().safetyCheckIns] });
+        // C2 — mémoriser le contact pour les futurs check-ins en 1 tap
+        set({
+          safetyCheckIns: [entry, ...get().safetyCheckIns],
+          defaultEmergencyContact: c.emergencyContact || get().defaultEmergencyContact,
+          defaultEmergencyPhone: c.emergencyPhone || get().defaultEmergencyPhone,
+        });
         return id;
       },
       completeSafetyCheckIn: (id) => {
         const list = get().safetyCheckIns.map(c => c.id === id ? { ...c, status: 'returned' as const } : c);
         set({ safetyCheckIns: list });
+      },
+
+      // C1 — Activity intents API
+      toggleActivityIntent: ({ targetType, targetId, targetTitle, sport, plannedDate }) => {
+        const s = get();
+        const me = s.userName || (s.language === 'fr' ? 'Moi' : 'Me');
+        const existing = s.activityIntents.find(i => i.targetType === targetType && String(i.targetId) === String(targetId) && i.authorName === me);
+        if (existing) {
+          set({ activityIntents: s.activityIntents.filter(i => i.id !== existing.id) });
+          return false; // toggled off
+        }
+        // default plannedDate = next Saturday
+        const defaultDate = (() => {
+          const now = new Date();
+          const daysUntilSat = (6 - now.getDay() + 7) % 7 || 7;
+          const d = new Date(now.getTime() + daysUntilSat * 24 * 3600 * 1000);
+          return d.toISOString().slice(0, 10);
+        })();
+        const entry: ActivityIntent = {
+          id: 'intent-' + Date.now(),
+          targetType,
+          targetId,
+          targetTitle,
+          sport,
+          authorName: me,
+          plannedDate: plannedDate || defaultDate,
+          createdAt: new Date().toISOString(),
+        };
+        set({ activityIntents: [entry, ...s.activityIntents] });
+        return true; // toggled on
+      },
+
+      getIntentsFor: (targetType, targetId) => {
+        return get().activityIntents.filter(i => i.targetType === targetType && String(i.targetId) === String(targetId));
+      },
+
+      isUserIntending: (targetType, targetId) => {
+        const s = get();
+        const me = s.userName || (s.language === 'fr' ? 'Moi' : 'Me');
+        return s.activityIntents.some(i => i.targetType === targetType && String(i.targetId) === String(targetId) && i.authorName === me);
       },
 
       bookCoach: (b) => {
@@ -1012,6 +1111,9 @@ export const useStore = create<AppState>()(
         savedPlans: state.savedPlans,
         quickMatches: state.quickMatches,
         safetyCheckIns: state.safetyCheckIns,
+        defaultEmergencyContact: state.defaultEmergencyContact,
+        defaultEmergencyPhone: state.defaultEmergencyPhone,
+        activityIntents: state.activityIntents,
         coachBookings: state.coachBookings,
         marketplaceThreads: state.marketplaceThreads,
         routeReports: state.routeReports,
