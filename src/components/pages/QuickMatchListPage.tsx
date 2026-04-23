@@ -3,7 +3,7 @@ import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 export default function QuickMatchListPage() {
-  const { closeSubPage, language, quickMatches, joinQuickMatch, userName, showToast, selectedSports, removeQuickMatch } = useStore();
+  const { closeSubPage, setPage, language, quickMatches, joinQuickMatch, userName, showToast, selectedSports, removeQuickMatch } = useStore();
 
   const myName = userName || t('common.me', language);
   // Filter: future matches only, in user's sports
@@ -60,9 +60,15 @@ export default function QuickMatchListPage() {
       </div>
       <div className="px-4 py-4 space-y-3">
         {active.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 px-4 text-gray-400">
             <p className="text-5xl mb-3">🤝</p>
-            <p className="text-sm">{t('qm.noMatches', language)}</p>
+            <p className="text-sm font-medium text-white mb-2">{t('qm.noMatches', language)}</p>
+            <p className="text-xs text-gray-400 mb-5 max-w-xs mx-auto leading-relaxed">{t('qm.noMatchesHint', language)}</p>
+            <button
+              type="button"
+              onClick={() => { closeSubPage(); setPage('explore'); }}
+              className="px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition"
+            >{t('qm.exploreSpots', language)}</button>
           </div>
         )}
         {mine.length > 0 && (

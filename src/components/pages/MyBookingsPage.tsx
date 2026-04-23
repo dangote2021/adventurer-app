@@ -3,7 +3,7 @@ import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 export default function MyBookingsPage() {
-  const { closeSubPage, language, coachBookings, cancelBooking, showToast } = useStore();
+  const { closeSubPage, setSubPage, language, coachBookings, cancelBooking, showToast } = useStore();
   const active = coachBookings.filter(b => b.status !== 'cancelled');
 
   const handleCancel = (id: string) => {
@@ -25,9 +25,15 @@ export default function MyBookingsPage() {
 
       <div className="px-4 py-4 space-y-3">
         {active.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 px-4 text-gray-400">
             <p className="text-5xl mb-3">📭</p>
-            <p>{t('booking.noBookings', language)}</p>
+            <p className="text-sm font-medium text-white mb-2">{t('booking.noBookings', language)}</p>
+            <p className="text-xs text-gray-400 mb-5 max-w-xs mx-auto leading-relaxed">{t('booking.noBookingsHint', language)}</p>
+            <button
+              type="button"
+              onClick={() => setSubPage('coach-hub')}
+              className="px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-semibold hover:opacity-90 transition"
+            >{t('booking.findCoach', language)}</button>
           </div>
         )}
 

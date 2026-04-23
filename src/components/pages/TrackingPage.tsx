@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
+import { t } from '@/lib/i18n';
 import {
   GpsRecorder,
   TrackPoint,
@@ -16,6 +17,7 @@ export default function TrackingPage() {
   const selectedSports = useStore(s => s.selectedSports);
   const logActivity = useStore(s => s.logActivity);
   const showToast = useStore(s => s.showToast);
+  const language = useStore(s => s.language);
 
   const [state, setState] = useState<RecState>('idle');
   const [points, setPoints] = useState<TrackPoint[]>([]);
@@ -39,7 +41,7 @@ export default function TrackingPage() {
   const handleStart = () => {
     const ok = recorderRef.current?.start();
     if (!ok) {
-      showToast('GPS indisponible sur ce navigateur', 'warning', '📡');
+      showToast(t('tracking.gpsUnavailable', language), 'warning', '📡');
       return;
     }
     startTsRef.current = Date.now();
@@ -49,7 +51,7 @@ export default function TrackingPage() {
       setElapsed(Math.round((Date.now() - startTsRef.current) / 1000));
     }, 1000);
     setState('recording');
-    showToast('Enregistrement démarré 📡', 'success', '🟢');
+    showToast(t('tracking.recordingStarted', language), 'success', '🟢');
   };
 
   const handlePause = () => {
@@ -77,16 +79,17 @@ export default function TrackingPage() {
 
   const handleExport = () => {
     if (points.length < 2) {
-      showToast('Pas assez de points pour exporter', 'warning', '📍');
+      showToast(t('tracking.notEnoughPoints', language), 'warning', '📍');
       return;
     }
     const name = title.trim() || `Adventurer-${sport}-${new Date().toISOString().slice(0, 10)}`;
     downloadGpx(points, name, sport);
-    showToast('GPX exporté ✓', 'success', '📥');
+    showToast(t('tracking.gpxExported', language), 'success', '📥');
   };
 
   const handleSaveToLog = () => {
-    const name = title.trim() || `${sport} — ${new Date().toLocaleDateString('fr-FR')}`;
+    const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+    const name = title.trim() || `${sport} — ${new Date().toLocaleDateString(locale)}`;
     logActivity({
       sport,
       title: name,
@@ -94,7 +97,7 @@ export default function TrackingPage() {
       dplus: `${metrics.elevationGain}m`,
       duration: formatDuration(metrics.durationSec),
     });
-    showToast('Sortie ajoutée à ton carnet ✓', 'success', '📓');
+    showToast(t('tracking.activityAdded', language), 'success', '📓');
   };
 
   const handleReset = () => {

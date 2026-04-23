@@ -205,7 +205,7 @@ export default function ExplorePage() {
   // Debounce city search
   useEffect(() => {
     if (!showCitySearch) return;
-    const timer = setTimeout(() => searchCity(cityQuery), 400);
+    const timer = setTimeout(() => searchCity(cityQuery), 300);
     return () => clearTimeout(timer);
   }, [cityQuery, showCitySearch, searchCity]);
 
@@ -372,7 +372,22 @@ export default function ExplorePage() {
               aria-label={fr ? 'Recherche de ville' : 'City search'}
             />
             {citySearching && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs animate-pulse">{fr ? 'Recherche...' : 'Searching...'}</span>
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 text-gray-300 text-xs"
+                role="status"
+                aria-live="polite"
+              >
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                  <path d="M21 12a9 9 0 0 1-9 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                {fr ? 'Recherche…' : 'Searching…'}
+              </span>
+            )}
+            {!citySearching && cityQuery.length >= 2 && cityResults.length === 0 && (
+              <div className="absolute left-0 right-0 mt-1 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden z-30 px-4 py-3 text-sm text-gray-400">
+                {fr ? 'Aucune ville trouvée. Essaie une autre orthographe.' : 'No city found. Try another spelling.'}
+              </div>
             )}
             {cityResults.length > 0 && (
               <div className="absolute left-0 right-0 mt-1 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden z-30">
@@ -485,12 +500,12 @@ export default function ExplorePage() {
               <p className="text-gray-500 text-sm text-center py-6">{fr ? 'Aucun résultat' : 'No results'}</p>
             )}
             {filteredSpots.map((spot) => (
-              <div key={spot.id} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)] hover:bg-white/5 transition-colors">
+              <div key={spot.id} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)] hover:bg-white/5 transition-colors overflow-hidden">
                 <div className="flex items-start gap-3 mb-3">
-                  <span className="text-2xl">{spot.emoji}</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-base text-white">{spot.name}</h3>
-                    <p className="text-gray-400 text-sm">{spot.type}</p>
+                  <span className="text-2xl flex-shrink-0">{spot.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base text-white truncate">{spot.name}</h3>
+                    <p className="text-gray-400 text-sm truncate">{spot.type}</p>
                     <div className="flex gap-1 mt-1">
                       {[...Array(5)].map((_, i) => (
                         <span key={i} className={i < spot.rating ? '⭐' : '☆'} />
@@ -504,11 +519,11 @@ export default function ExplorePage() {
                   </span>
                 </div>
                 {isWaterSport(spot.sport) && spot.windSpeed != null && (
-                  <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-blue-900/20 border border-blue-500/20 rounded-lg">
+                  <div className="flex items-center flex-wrap gap-2 mb-3 px-3 py-2 bg-blue-900/20 border border-blue-500/20 rounded-lg">
                     <span className="text-base">💨</span>
-                    <span className="text-sm font-semibold text-white">{spot.windSpeed} kts {spot.windDirection}</span>
+                    <span className="text-sm font-semibold text-white whitespace-nowrap">{spot.windSpeed} kts {spot.windDirection}</span>
                     <span className="text-gray-500">·</span>
-                    <span className="text-sm text-blue-300">{spot.windStatus}</span>
+                    <span className="text-sm text-blue-300 truncate">{spot.windStatus}</span>
                   </div>
                 )}
                 <div className="border-t border-[var(--border)] pt-3">
@@ -572,13 +587,13 @@ export default function ExplorePage() {
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">{fr ? 'Matériel' : 'Gear'}</h3>
             {filteredMarket.slice(0, 3).map((item) => (
-              <div key={item.id} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)] hover:bg-white/5 transition-colors">
+              <div key={item.id} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)] hover:bg-white/5 transition-colors overflow-hidden">
                 <div className="flex items-start gap-3 mb-2">
-                  <span className="text-2xl">{item.emoji}</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-base text-white">{item.title}</h3>
+                  <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base text-white truncate">{item.title}</h3>
                     <p className="text-gray-300 font-semibold text-base">{item.price}</p>
-                    <p className="text-gray-500 text-sm">{item.condition}</p>
+                    <p className="text-gray-500 text-sm truncate">{item.condition}</p>
                   </div>
                 </div>
               </div>

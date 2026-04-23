@@ -403,8 +403,8 @@ export default function ProfilePage() {
       )}
 
       <div className="pt-16 px-4">
-        {/* P9: Profile completion bar */}
-        {profileCompletion < 100 && (
+        {/* P9: Profile completion bar — masqué dès 80 %, la checklist n'a pas à rester en header permanent */}
+        {profileCompletion < 80 && (
           <div className="mb-4 bg-[var(--card)] rounded-xl p-3">
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs font-semibold text-gray-400">{language === 'fr' ? 'Profil complété' : 'Profile completed'}</p>
@@ -413,7 +413,6 @@ export default function ProfilePage() {
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div className="h-full bg-[var(--accent)] rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }} />
             </div>
-            {profileCompletion === 100 && <p className="text-xs text-green-400 mt-1 text-center">🏆 {language === 'fr' ? 'Badge "Aventurier identifié" débloqué !' : '"Identified Adventurer" badge unlocked!'}</p>}
           </div>
         )}
 
