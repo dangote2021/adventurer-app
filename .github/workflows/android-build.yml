@@ -48,6 +48,10 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/adventurer-upload.keystore
           ls -la android/adventurer-upload.keystore
 
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x gradlew
+
       - name: Build signed AAB
         working-directory: android
         env:
