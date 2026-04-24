@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { getMarketItems, type MarketItem } from '@/lib/supabase/queries';
+import { getMarketItems, createMarketItem, type MarketItem } from '@/lib/supabase/queries';
 
 interface Item {
   id: string;
@@ -103,6 +103,56 @@ export default function MarketplacePage() {
   const [selectedCondition, setSelectedCondition] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  // B1 — formulaire création annonce
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formTitle, setFormTitle] = useState('');
+  const [formDesc, setFormDesc] = useState('');
+  const [formPrice, setFormPrice] = useState<string>('');
+  const [formCondition, setFormCondition] = useState<'Neuf' | 'Très bon' | 'Bon' | 'Correct'>('Très bon');
+  const [formSport, setFormSport] = useState<string>('Trail');
+  const [formEmoji, setFormEmoji] = useState<string>('📦');
+  const [formLocation, setFormLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const handleCreateSubmit = async () => {
+    setFormError(null);
+    const priceNum = parseFloat(formPrice);
+    if (!formTitle.trim() || isNaN(priceNum) || priceNum <= 0) {
+      setFormError(t('mp.formErrorRequired', language));
+      return;
+    }
+    setSubmitting(true);
+    const res = await createMarketItem({
+      title: formTitle.trim(),
+      description: formDesc.trim(),
+      emoji: formEmoji,
+      price: priceNum,
+      condition: formCondition,
+      sport: formSport,
+      location: formLocation.trim() || undefined,
+      type: 'sell',
+    });
+    setSubmitting(false);
+    if ('error' in res) {
+      setFormError(res.error.includes('connect') || res.error.includes('Non connect')
+        ? t('mp.formErrorAuth', language)
+        : t('mp.formErrorGeneric', language));
+      return;
+    }
+    // Succès : toast + fermeture + reset + refresh
+    showToast(t('mp.createdToast', language), 'success', '✅');
+    setShowCreateForm(false);
+    setFormTitle(''); setFormDesc(''); setFormPrice(''); setFormLocation(''); setFormEmoji('📦');
+    // Refresh items
+    try {
+      const data = await getMarketItems();
+      if (data.length > 0) {
+        setItems(data.map(mapMarketItemToItem));
+      }
+    } catch {}
+    setTab('buy');
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -511,7 +561,7 @@ export default function MarketplacePage() {
 
             <button
               type="button"
-              onClick={() => showToast(t('mp.createdToast', language), 'success', '✅')}
+              onClick={() => { setFormError(null); setShowCreateForm(true); }}
               className="w-full py-3 bg-[var(--accent)] text-white rounded-xl font-bold hover:opacity-90 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] text-sm"
               aria-label={t('mp.createListing', language)}
             >
@@ -520,6 +570,188 @@ export default function MarketplacePage() {
           </div>
         )}
       </div>
+
+      {/* B1 — Modal création annonce */}
+      {showCreateForm && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('mp.formTitle', language)}
+          onClick={() => !submitting && setShowCreateForm(false)}
+        >
+          <div
+            className="w-full max-w-[430px] bg-[var(--card)] rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-[var(--card)] px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="font-bold text-base">📤 {t('mp.formTitle', language)}</h3>
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                disabled={submitting}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 transition flex items-center justify-center text-sm"
+                aria-label={t('mp.formCancel', language)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Titre */}
+              <div>
+                <label htmlFor="mp-form-title" className="block text-sm font-medium mb-1 text-gray-300">
+                  {t('mp.formLabelTitle', language)} *
+                </label>
+                <input
+                  id="mp-form-title"
+                  type="text"
+                  value={formTitle}
+                  onChange={e => setFormTitle(e.target.value)}
+                  placeholder={t('mp.formPlaceholderTitle', language)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-[var(--accent)] focus:outline-none text-sm"
+                  maxLength={100}
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="mp-form-desc" className="block text-sm font-medium mb-1 text-gray-300">
+                  {t('mp.formLabelDesc', language)}
+                </label>
+                <textarea
+                  id="mp-form-desc"
+                  value={formDesc}
+                  onChange={e => setFormDesc(e.target.value)}
+                  placeholder={t('mp.formPlaceholderDesc', language)}
+                  rows={3}
+                  maxLength={500}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-[var(--accent)] focus:outline-none text-sm resize-none"
+                />
+              </div>
+
+              {/* Prix + Emoji */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label htmlFor="mp-form-price" className="block text-sm font-medium mb-1 text-gray-300">
+                    {t('mp.formLabelPrice', language)} *
+                  </label>
+                  <input
+                    id="mp-form-price"
+                    type="number"
+                    value={formPrice}
+                    onChange={e => setFormPrice(e.target.value)}
+                    placeholder={t('mp.formPlaceholderPrice', language)}
+                    min="1"
+                    step="1"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-[var(--accent)] focus:outline-none text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="mp-form-emoji" className="block text-sm font-medium mb-1 text-gray-300">
+                    {t('mp.formLabelEmoji', language)}
+                  </label>
+                  <input
+                    id="mp-form-emoji"
+                    type="text"
+                    value={formEmoji}
+                    onChange={e => setFormEmoji(e.target.value.slice(0, 2))}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-center text-xl focus:border-[var(--accent)] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Condition */}
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-300">{t('mp.formLabelCondition', language)}</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['Neuf', 'Très bon', 'Bon', 'Correct'] as const).map((c) => {
+                    const label = c === 'Neuf' ? t('mp.formConditionNew', language)
+                      : c === 'Très bon' ? t('mp.formConditionExcellent', language)
+                      : c === 'Bon' ? t('mp.formConditionGood', language)
+                      : t('mp.formConditionFair', language);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setFormCondition(c)}
+                        className={`py-2 rounded-lg text-xs font-medium transition ${
+                          formCondition === c
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sport */}
+              <div>
+                <label htmlFor="mp-form-sport" className="block text-sm font-medium mb-1 text-gray-300">
+                  {t('mp.formLabelSport', language)}
+                </label>
+                <select
+                  id="mp-form-sport"
+                  value={formSport}
+                  onChange={e => setFormSport(e.target.value)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-[var(--accent)] focus:outline-none text-sm"
+                >
+                  {['Trail', 'Randonnée', 'Alpinisme', 'Escalade', 'Bloc', 'Vélo', 'VTT', 'Kitesurf', 'Surf', 'Wingfoil', 'Ski', 'Ski de rando', 'Snowboard', 'Plongée', 'Apnée', 'Parapente', 'Kayak', 'Multi'].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label htmlFor="mp-form-loc" className="block text-sm font-medium mb-1 text-gray-300">
+                  {t('mp.formLabelLocation', language)}
+                </label>
+                <input
+                  id="mp-form-loc"
+                  type="text"
+                  value={formLocation}
+                  onChange={e => setFormLocation(e.target.value)}
+                  placeholder={t('mp.formPlaceholderLocation', language)}
+                  maxLength={80}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-[var(--accent)] focus:outline-none text-sm"
+                />
+              </div>
+
+              {formError && (
+                <div className="bg-red-900/30 border border-red-800/40 text-red-300 px-3 py-2 rounded-lg text-sm">
+                  {formError}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  disabled={submitting}
+                  className="py-3 bg-white/5 text-gray-300 rounded-xl font-medium hover:bg-white/10 transition text-sm disabled:opacity-50"
+                >
+                  {t('mp.formCancel', language)}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateSubmit}
+                  disabled={submitting}
+                  className="py-3 bg-[var(--accent)] text-white rounded-xl font-bold hover:opacity-90 transition text-sm disabled:opacity-50"
+                >
+                  {submitting ? t('mp.formSubmitting', language) : t('mp.formSubmit', language)}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

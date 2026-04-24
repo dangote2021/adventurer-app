@@ -1,9 +1,23 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
+import { getMarketItem } from '@/lib/supabase/queries';
 
-const ITEMS: Record<string, { id: string; title: string; price: number; condition: string; sport: string; sellerId: string; sellerName: string; sellerAvatar: string; emoji: string; description: string }> = {
+type ResolvedItem = {
+  id: string;
+  title: string;
+  price: number;
+  condition: string;
+  sport: string;
+  sellerId: string;
+  sellerName: string;
+  sellerAvatar: string;
+  emoji: string;
+  description: string;
+};
+
+const HARDCODED_ITEMS: Record<string, ResolvedItem> = {
   'item-1': { id: 'item-1', title: 'Chaussures Trail Salomon S/LAB 45', price: 120, condition: 'Neuf', sport: 'Trail', sellerId: 'user-1', sellerName: 'Alex Vaillant', sellerAvatar: '👨‍🏃', emoji: '👟', description: 'Chaussures de trail S/LAB taille 45, neuves jamais portées, vendues avec boîte d\'origine.' },
   'item-2': { id: 'item-2', title: 'Baudrier escalade Petzl Avao 41-47', price: 85, condition: 'Très bon', sport: 'Escalade', sellerId: 'user-2', sellerName: 'Marie Rouche', sellerAvatar: '👩‍🧗', emoji: '🧗', description: 'Baudrier Petzl Avao en très bon état, utilisé en salle, pas d\'usure visible.' },
   'item-3': { id: 'item-3', title: 'Aile kitesurf Liquid Shiv 17m', price: 450, condition: 'Bon', sport: 'Kitesurf', sellerId: 'user-3', sellerName: 'Thomas Wave', sellerAvatar: '🏄', emoji: '🪁', description: 'Aile 17m polyvalente, parfaite pour vent léger, barre incluse.' },
@@ -15,9 +29,51 @@ const ITEMS: Record<string, { id: string; title: string; price: number; conditio
 export default function MarketplaceItemPage({ itemId }: { itemId: string }) {
   const { closeSubPage, setSubPage, showToast, language, openMarketplaceThread, userName, marketplaceThreads } = useStore();
   const [message, setMessage] = useState('');
-  const item = ITEMS[itemId];
+  const [item, setItem] = useState<ResolvedItem | null>(() => HARDCODED_ITEMS[itemId] || null);
+  const [loading, setLoading] = useState<boolean>(!HARDCODED_ITEMS[itemId]);
+  const [fetchError, setFetchError] = useState<boolean>(false);
 
-  if (!item) {
+  useEffect(() => {
+    // Si pas dans les hardcodés, on tente Supabase
+    if (HARDCODED_ITEMS[itemId]) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setFetchError(false);
+      const fetched = await getMarketItem(itemId);
+      if (cancelled) return;
+      if (!fetched) {
+        setFetchError(true);
+        setItem(null);
+      } else {
+        setItem({
+          id: fetched.id,
+          title: fetched.title,
+          price: fetched.price,
+          condition: fetched.condition || '—',
+          sport: fetched.sport || 'Multi',
+          sellerId: fetched.seller_id,
+          sellerName: fetched.seller_name || t('mp.seller', language) || 'Vendeur',
+          sellerAvatar: fetched.seller_avatar || '🧭',
+          emoji: fetched.emoji || '📦',
+          description: fetched.description || '',
+        });
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [itemId, language]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] max-w-[430px] mx-auto p-8 text-center">
+        <button type="button" onClick={closeSubPage} className="mb-4 text-gray-400">← {t('common.back', language)}</button>
+        <p className="text-gray-400 mt-8">…</p>
+      </div>
+    );
+  }
+
+  if (!item || fetchError) {
     return (
       <div className="min-h-screen bg-[var(--bg)] max-w-[430px] mx-auto p-8 text-center">
         <button type="button" onClick={closeSubPage} className="mb-4 text-gray-400">← {t('common.back', language)}</button>

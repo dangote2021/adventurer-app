@@ -209,6 +209,72 @@ export async function getMarketItems(sports?: string[]): Promise<MarketItem[]> {
   return data || [];
 }
 
+/** Get a single market item by ID, with seller profile info */
+export async function getMarketItem(itemId: string): Promise<(MarketItem & { seller_name?: string; seller_avatar?: string }) | null> {
+  const { data, error } = await supabase
+    .from('market_items')
+    .select('id, seller_id, title, description, emoji, price, type, condition, sport, location, is_available, shipping_available, shipping_cost_cents, images, created_at')
+    .eq('id', itemId)
+    .single();
+
+  if (error || !data) {
+    if (error) console.error('[queries] getMarketItem error:', error.message);
+    return null;
+  }
+
+  // Try to fetch seller profile (name + avatar). Non bloquant.
+  let sellerInfo: { seller_name?: string; seller_avatar?: string } = {};
+  if (data.seller_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, avatar_url')
+      .eq('id', data.seller_id)
+      .single();
+    if (profile) {
+      sellerInfo = { seller_name: profile.name as string, seller_avatar: profile.avatar_url as string };
+    }
+  }
+
+  return { ...data, ...sellerInfo } as MarketItem & { seller_name?: string; seller_avatar?: string };
+}
+
+/** Insert a new market item (seller = current user) */
+export async function createMarketItem(payload: {
+  title: string;
+  description: string;
+  emoji: string;
+  price: number;
+  condition: string;
+  sport: string;
+  location?: string;
+  type?: 'sell' | 'rent';
+}): Promise<{ id: string } | { error: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non connecté' };
+
+  const { data, error } = await supabase
+    .from('market_items')
+    .insert({
+      seller_id: user.id,
+      title: payload.title,
+      description: payload.description,
+      emoji: payload.emoji || '📦',
+      price: payload.price,
+      type: payload.type || 'sell',
+      condition: payload.condition,
+      sport: payload.sport,
+      location: payload.location || null,
+      is_available: true,
+    })
+    .select('id')
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message || 'Erreur à l\'insertion' };
+  }
+  return { id: data.id as string };
+}
+
 // ============ USER PROFILE ============
 
 /** Get user profile from profiles table */

@@ -111,8 +111,8 @@ export default function TrackingPage() {
   const sports = selectedSports.length > 0 ? selectedSports : ['Trail', 'Rando', 'Vélo', 'Kitesurf', 'Ski'];
   const lastPoint = points[points.length - 1];
   const accuracyLabel = lastPoint?.accuracy
-    ? lastPoint.accuracy < 15 ? '🟢 Excellent' : lastPoint.accuracy < 40 ? '🟡 Bon' : '🔴 Faible'
-    : 'En attente…';
+    ? lastPoint.accuracy < 15 ? t('tracking.accuracyExcellent', language) : lastPoint.accuracy < 40 ? t('tracking.accuracyGood', language) : t('tracking.accuracyWeak', language)
+    : t('tracking.waiting', language);
 
   return (
     <div className="min-h-screen bg-[#FEFAE0] max-w-[500px] mx-auto pb-20">
@@ -122,16 +122,16 @@ export default function TrackingPage() {
           type="button"
           onClick={() => router.back()}
           className="w-9 h-9 rounded-full bg-[#2D6A4F]/10 flex items-center justify-center hover:bg-[#2D6A4F]/20 transition"
-          aria-label="Retour"
+          aria-label={t('tracking.back', language)}
         >
           ←
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <h1 className="text-lg font-bold text-[#1B4332]">📡 Tracker GPS</h1>
+            <h1 className="text-lg font-bold text-[#1B4332]">📡 {t('tracking.title', language)}</h1>
             <span className="text-[8px] font-black tracking-widest bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] px-1.5 py-0.5 rounded-full shadow-sm">BETA</span>
           </div>
-          <p className="text-xs text-gray-500">Enregistre ta trace, exporte en GPX</p>
+          <p className="text-xs text-gray-500">{t('tracking.subtitle', language)}</p>
         </div>
         <div className="text-xs text-gray-600">{accuracyLabel}</div>
       </div>
@@ -143,29 +143,29 @@ export default function TrackingPage() {
             {formatDuration(elapsed)}
           </div>
           <div className="mt-2 text-xs opacity-80">
-            {state === 'idle' && 'Prêt à partir'}
-            {state === 'recording' && '🟢 Enregistrement en cours'}
-            {state === 'paused' && '⏸️ En pause'}
-            {state === 'finished' && '✅ Sortie terminée'}
+            {state === 'idle' && t('tracking.stateIdle', language)}
+            {state === 'recording' && t('tracking.stateRecording', language)}
+            {state === 'paused' && t('tracking.statePaused', language)}
+            {state === 'finished' && t('tracking.stateFinished', language)}
           </div>
         </div>
 
         {/* Metrics */}
         <div className="grid grid-cols-3 gap-2">
-          <Metric label="Distance" value={`${metrics.distanceKm.toFixed(2)} km`} icon="🏃" />
-          <Metric label="D+" value={`${metrics.elevationGain}m`} icon="⛰️" />
-          <Metric label="Allure" value={`${metrics.avgSpeedKmh} km/h`} icon="💨" />
+          <Metric label={t('tracking.distance', language)} value={`${metrics.distanceKm.toFixed(2)} km`} icon="🏃" />
+          <Metric label={t('tracking.elevation', language)} value={`${metrics.elevationGain}m`} icon="⛰️" />
+          <Metric label={t('tracking.pace', language)} value={`${metrics.avgSpeedKmh} km/h`} icon="💨" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Metric label="Vitesse max" value={`${metrics.maxSpeedKmh} km/h`} icon="⚡" small />
-          <Metric label="Points GPS" value={`${metrics.points}`} icon="📍" small />
+          <Metric label={t('tracking.maxSpeed', language)} value={`${metrics.maxSpeedKmh} km/h`} icon="⚡" small />
+          <Metric label={t('tracking.gpsPoints', language)} value={`${metrics.points}`} icon="📍" small />
         </div>
 
         {/* Controls */}
         {state === 'idle' && (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Sport</label>
+              <label className="block text-sm text-gray-700 mb-1">{t('tracking.sport', language)}</label>
               <select
                 value={sport}
                 onChange={(e) => setSport(e.target.value)}
@@ -179,7 +179,7 @@ export default function TrackingPage() {
               onClick={handleStart}
               className="w-full py-4 bg-[#F77F00] text-white rounded-2xl font-bold text-lg shadow hover:bg-[#D65A1A] transition"
             >
-              🟢 Démarrer
+              {t('tracking.start', language)}
             </button>
           </div>
         )}
@@ -191,14 +191,14 @@ export default function TrackingPage() {
               onClick={handlePause}
               className="py-4 bg-amber-100 text-amber-800 border border-amber-300 rounded-2xl font-bold transition hover:bg-amber-200"
             >
-              ⏸️ Pause
+              {t('tracking.pause', language)}
             </button>
             <button
               type="button"
               onClick={handleFinish}
               className="py-4 bg-red-100 text-red-700 border border-red-300 rounded-2xl font-bold transition hover:bg-red-200"
             >
-              ⏹ Terminer
+              {t('tracking.finish', language)}
             </button>
           </div>
         )}
@@ -210,14 +210,14 @@ export default function TrackingPage() {
               onClick={handleResume}
               className="py-4 bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-2xl font-bold transition hover:bg-emerald-200"
             >
-              ▶️ Reprendre
+              {t('tracking.resume', language)}
             </button>
             <button
               type="button"
               onClick={handleFinish}
               className="py-4 bg-red-100 text-red-700 border border-red-300 rounded-2xl font-bold transition hover:bg-red-200"
             >
-              ⏹ Terminer
+              {t('tracking.finish', language)}
             </button>
           </div>
         )}
@@ -225,12 +225,12 @@ export default function TrackingPage() {
         {state === 'finished' && (
           <div className="space-y-3">
             <label className="block">
-              <span className="block text-sm text-gray-700 mb-1">Nom de la sortie</span>
+              <span className="block text-sm text-gray-700 mb-1">{t('tracking.outingName', language)}</span>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={`${sport} — ${new Date().toLocaleDateString('fr-FR')}`}
+                placeholder={`${sport} — ${new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')}`}
                 className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm"
               />
             </label>
@@ -240,14 +240,14 @@ export default function TrackingPage() {
                 onClick={handleExport}
                 className="py-3 bg-[#2D6A4F] text-white rounded-xl font-medium transition hover:bg-[#1B4332]"
               >
-                📥 Export GPX
+                {t('tracking.exportGpx', language)}
               </button>
               <button
                 type="button"
                 onClick={handleSaveToLog}
                 className="py-3 bg-[#F77F00] text-white rounded-xl font-medium transition hover:bg-[#D65A1A]"
               >
-                📓 Ajouter au carnet
+                {t('tracking.addToLogbook', language)}
               </button>
             </div>
             <button
@@ -255,17 +255,17 @@ export default function TrackingPage() {
               onClick={handleReset}
               className="w-full py-2 bg-gray-100 text-gray-600 rounded-xl text-sm transition hover:bg-gray-200"
             >
-              🔄 Nouvelle sortie
+              {t('tracking.newOuting', language)}
             </button>
           </div>
         )}
 
         {/* Tips */}
         <div className="bg-[#FEFAE0] border border-[#DDA15E]/40 rounded-xl p-3 text-xs text-gray-600 space-y-1">
-          <div className="font-medium text-gray-800">💡 Conseils terrain</div>
-          <div>• Garde le téléphone écran allumé pour un tracking précis.</div>
-          <div>• Altitude GPS = ±10m, corrige plus tard avec les données cartographiques.</div>
-          <div>• En 4G/5G faible, les points s'enregistrent quand même (hors-ligne OK).</div>
+          <div className="font-medium text-gray-800">{t('tracking.tipsTitle', language)}</div>
+          <div>{t('tracking.tip1', language)}</div>
+          <div>{t('tracking.tip2', language)}</div>
+          <div>{t('tracking.tip3', language)}</div>
         </div>
       </div>
     </div>

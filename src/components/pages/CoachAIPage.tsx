@@ -146,17 +146,67 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
   if (lower.includes('trail') || lower.includes('ultra') || lower.includes('course')) {
     const weeks = detected.weeks || 12;
     const distance = detected.targetKm || 80;
+    const base = detected.kmPerWeek || 30;
+    // Module la sortie longue selon le volume actuel (règle 25-30% du volume hebdo)
+    const longRunHoursBase = Math.max(1.5, Math.min(3, +(base * 0.28 / 10).toFixed(1))); // 1.5h → 3h
+    const longRunHoursVolume = Math.max(2, Math.min(5, longRunHoursBase + 1));
+    const longRunHoursSpec = Math.max(3, Math.min(7, Math.round(distance / 15))); // ~6km/h en montagne
+    // Module le D+ selon la distance cible (~15-20m/km pour un ultra)
+    const dplusVolume = Math.round((distance * 12) / 100) * 100; // arrondi centaine
+    const dplusSpec = Math.round((distance * 18) / 100) * 100;
+    // Nombre de sorties selon volume de base
+    const sorties = base < 20 ? '3 sorties/sem' : base < 40 ? '4 sorties/sem' : '4-5 sorties/sem';
+    // Kilométrage progressif
+    const kmS1 = Math.round(base * 0.9);
+    const kmS5 = Math.round(base * 1.3);
+    const kmS9 = Math.round(base * 1.5);
+    const hasMetadata = !!(detected.kmPerWeek || detected.targetKm || detected.weeks);
     return {
       detected,
       title: detected.targetKm
         ? `Plan ${detected.goal === 'ultra-trail' ? 'Ultra-Trail' : 'Trail'} ${distance}km — ${weeks} sem`
         : 'Plan Trail / Ultra-Trail personnalisé',
-      overview: `Programme de ${weeks} semaines pour préparer un ${detected.goal === 'ultra-trail' ? 'ultra-trail' : 'trail'} de ${distance}km+. Basé sur ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '3-4 sorties/semaine'} avec montée en charge progressive${detected.kmPerWeek ? ' depuis ton volume actuel (' + detected.kmPerWeek + 'km/sem)' : ''}.${echoPrompt()}`,
+      overview: `Programme de ${weeks} semaines pour préparer un ${detected.goal === 'ultra-trail' ? 'ultra-trail' : 'trail'} de ${distance}km+. Basé sur ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : sorties} avec montée en charge progressive${detected.kmPerWeek ? ' depuis ton volume actuel (' + detected.kmPerWeek + 'km/sem → pic à ~' + kmS9 + 'km/sem)' : ''}.${echoPrompt()}${!hasMetadata ? ' ⚠️ Prompt assez générique : donne-moi ton volume actuel et ton échéance pour un plan vraiment sur-mesure.' : ''}`,
       phases: [
-        { name: '🟢 Phase Base (S1-S4)', duration: '4 semaines', description: 'Construction de l\'endurance fondamentale', sessions: ['Sortie longue 2h en Z2', 'Fartlek 45min en nature', 'Rando-course 1h30 en montagne', 'Renforcement musculaire 30min'] },
-        { name: '🟡 Phase Volume (S5-S8)', duration: '4 semaines', description: 'Augmentation du volume et du dénivelé', sessions: ['Sortie longue 3h avec 1000m D+', 'Intervalles côtes 1h', 'Enchaînement J+J 2x1h30', 'Yoga / Mobilité 45min'] },
-        { name: '🔴 Phase Spécifique (S9-S11)', duration: '3 semaines', description: 'Simulation des conditions de course', sessions: ['Sortie Ultra-simulation 4-5h', 'Travail en fatigue D+/D-', 'Gestion nutrition effort long', 'Récup active 1h'] },
-        { name: '⚪ Affûtage (S12)', duration: '1 semaine', description: 'Réduction du volume, maintien de l\'intensité', sessions: ['30min facile', '20min avec quelques accélérations', 'Repos complet J-2', 'Jour de course !'] },
+        {
+          name: `🟢 Phase Base (S1-S${Math.max(2, Math.round(weeks * 0.33))})`,
+          duration: `${Math.max(2, Math.round(weeks * 0.33))} semaines`,
+          description: `Construction de l'endurance fondamentale (~${kmS1} km/sem)`,
+          sessions: [
+            `Sortie longue ${longRunHoursBase}h en Z2`,
+            'Fartlek 45min en nature',
+            `Rando-course ${Math.max(1.5, longRunHoursBase - 0.5)}h en montagne`,
+            'Renforcement musculaire 30min',
+          ],
+        },
+        {
+          name: `🟡 Phase Volume (S${Math.max(3, Math.round(weeks * 0.33) + 1)}-S${Math.max(6, Math.round(weeks * 0.66))})`,
+          duration: `${Math.max(3, Math.round(weeks * 0.33))} semaines`,
+          description: `Augmentation du volume et du dénivelé (~${kmS5} km/sem)`,
+          sessions: [
+            `Sortie longue ${longRunHoursVolume}h avec ${dplusVolume}m D+`,
+            'Intervalles côtes 1h',
+            'Enchaînement J+J 2x1h30',
+            'Yoga / Mobilité 45min',
+          ],
+        },
+        {
+          name: `🔴 Phase Spécifique (S${Math.max(7, Math.round(weeks * 0.66) + 1)}-S${Math.max(weeks - 1, 9)})`,
+          duration: `${Math.max(2, weeks - Math.round(weeks * 0.66) - 1)} semaines`,
+          description: `Simulation des conditions de course (pic ~${kmS9} km/sem)`,
+          sessions: [
+            `Sortie ${detected.goal === 'ultra-trail' ? 'Ultra-simulation' : 'simulation course'} ${longRunHoursSpec}h (${dplusSpec}m D+)`,
+            'Travail en fatigue D+/D-',
+            'Gestion nutrition effort long',
+            'Récup active 1h',
+          ],
+        },
+        {
+          name: `⚪ Affûtage (S${weeks})`,
+          duration: '1 semaine',
+          description: 'Réduction du volume, maintien de l\'intensité',
+          sessions: ['30min facile', '20min avec quelques accélérations', 'Repos complet J-2', 'Jour de course !'],
+        },
       ],
       tips: ['Hydratation : 500ml/h minimum', 'Nutrition : tester en entraînement', 'Sommeil : 8h minimum', 'Écouter son corps : ne pas forcer sur la fatigue'],
     };
