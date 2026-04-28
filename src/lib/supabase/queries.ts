@@ -227,11 +227,11 @@ export async function getMarketItem(itemId: string): Promise<(MarketItem & { sel
   if (data.seller_id) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, avatar_url')
+      .select('name, avatar')
       .eq('id', data.seller_id)
       .single();
     if (profile) {
-      sellerInfo = { seller_name: profile.name as string, seller_avatar: profile.avatar_url as string };
+      sellerInfo = { seller_name: profile.name as string, seller_avatar: profile.avatar as string };
     }
   }
 

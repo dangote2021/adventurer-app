@@ -65,8 +65,8 @@ export default function ProfilePage() {
       if (profile) {
         setDbProfile(profile as Record<string, unknown>);
         // Sync to store if store values are empty
-        if (!userName && typeof profile.display_name === 'string') {
-          setUserName(profile.display_name);
+        if (!userName && typeof profile.name === 'string') {
+          setUserName(profile.name);
         }
         if (!userBio && typeof profile.bio === 'string') {
           setUserBio(profile.bio);
@@ -88,12 +88,12 @@ export default function ProfilePage() {
   }, [authUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derived display values: prefer store data, fall back to Supabase data, then mock
-  const displayName = userName || (dbProfile?.display_name as string) || '';
+  const displayName = userName || (dbProfile?.name as string) || '';
   const displayEmail = userEmail || authUser?.email || '';
   const displayBio = userBio || (dbProfile?.bio as string) || '';
   const displayAvatar = userAvatar !== '👤' ? userAvatar : (dbProfile?.avatar as string) || userAvatar;
   const displaySports = selectedSports.length > 0 ? selectedSports : (dbSports ?? []);
-  const displayLevel = (dbProfile?.level as string) || (dbProfile?.experience_level as string) || '';
+  const displayLevel = (dbProfile?.level as string) || '';
 
   const avatarOptions = ['👤', '🧗', '🏄', '🚴', '🏔️', '🪁', '🤿', '🏃', '🎿', '🪂', '🧘', '🏋️'];
 
