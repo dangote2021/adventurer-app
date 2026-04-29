@@ -71,9 +71,31 @@ function parsePrompt(prompt: string): PromptMeta {
   }
 
   // Échéance : mois ("en septembre", "en mai")
+  // monthIndex est aligné en parallèle avec monthKeywords (FR puis EN)
   const monthKeywords = ['janvier', 'février', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'aout', 'septembre', 'octobre', 'novembre', 'décembre', 'decembre', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-  for (const m of monthKeywords) {
-    if (lower.includes(m)) { meta.when = m; break; }
+  const monthIndex =     [0,         1,           1,         2,        3,        4,     5,      6,         7,       7,      8,            9,          10,          11,          11,         0,         1,          2,       3,       4,     5,      6,      7,        8,           9,         10,         11];
+  for (let i = 0; i < monthKeywords.length; i++) {
+    if (lower.includes(monthKeywords[i])) {
+      meta.when = monthKeywords[i];
+      // Marc (panel V4/V5) : si l'utilisateur a précisé un mois mais pas de durée explicite,
+      // on calcule le nombre de semaines depuis aujourd'hui jusqu'au 1er du mois cible.
+      // Si le mois est passé cette année, on vise l'année prochaine.
+      if (!meta.weeks) {
+        const today = new Date();
+        const targetMonth = monthIndex[i];
+        let targetYear = today.getFullYear();
+        const target = new Date(targetYear, targetMonth, 1);
+        if (target.getTime() < today.getTime()) {
+          targetYear += 1;
+        }
+        const targetDate = new Date(targetYear, targetMonth, 1);
+        const diffMs = targetDate.getTime() - today.getTime();
+        const diffWeeks = Math.max(2, Math.round(diffMs / (7 * 24 * 3600 * 1000)));
+        // On clamp dans une fenêtre raisonnable (2 → 52 semaines)
+        meta.weeks = Math.min(52, diffWeeks);
+      }
+      break;
+    }
   }
 
   // Objectif
