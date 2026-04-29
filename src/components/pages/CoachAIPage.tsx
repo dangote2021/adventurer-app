@@ -50,8 +50,15 @@ function parsePrompt(prompt: string): PromptMeta {
   if (targetKmMatch) meta.targetKm = parseInt(targetKmMatch[1], 10);
 
   // Profondeur visée (plongée/apnée) : "atteindre -30m", "plonger à 25m"
+  // Bug fix panel V3 : précédence && / || ambiguë, parenthèses explicites pour
+  // que "apnée + prof" soit traité comme un seul groupe (et pas absorbé par || avant).
   const depthMatch = lower.match(/[-−]?(\d{1,3})\s*m(?:ètres?)?\b/);
-  if (depthMatch && (lower.includes('profondeur') || lower.includes('plongée') || lower.includes('plonger') || lower.includes('apnée') && lower.includes('prof'))) {
+  if (depthMatch && (
+    lower.includes('profondeur') ||
+    lower.includes('plongée') ||
+    lower.includes('plonger') ||
+    (lower.includes('apnée') && lower.includes('prof'))
+  )) {
     meta.targetDepth = parseInt(depthMatch[1], 10);
   }
 

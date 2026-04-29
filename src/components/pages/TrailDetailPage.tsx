@@ -10,12 +10,12 @@ interface TrailDetailPageProps {
   trailId?: string | number;
 }
 
-const DEFAULT_PARTICIPANTS = [
-  { id: 'user-1', name: 'Sophie', avatar: '👩‍🎓' },
-  { id: 'user-2', name: 'Thomas', avatar: '👨‍💼' },
-  { id: 'user-3', name: 'Claire', avatar: '👩‍🔬' },
-  { id: 'user-4', name: 'Marc', avatar: '👨‍⚕️' },
-];
+// DEFAULT_PARTICIPANTS supprimé — panel V3 / Marc UTMB.
+// Avant : 4 avatars (Sophie 👩‍🎓, Thomas 👨‍💼, Claire 👩‍🔬, Marc 👨‍⚕️) affichés
+// sur TOUS les trails comme "qui prévoit", quel que soit le sport ou la région.
+// Maintenant : on lit les vrais quickMatches du store (ceux que les vrais users
+// publient via le bouton "Quick Match" sur la fiche). Empty state honnête si
+// personne n'a publié.
 
 function ratingLabel(rating: string, lang: Language): string {
   if (rating === 'idéal') return t('rating.ideal', lang);
@@ -60,7 +60,7 @@ function ElevationProfile({ data, ariaLabel }: { data: number[]; ariaLabel: stri
 }
 
 export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
-  const { closeSubPage, openUserProfile, showToast, language, routeReports } = useStore();
+  const { closeSubPage, openUserProfile, showToast, language, routeReports, quickMatches } = useStore();
   const [joined, setJoined] = useState(false);
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   // showSafety retiré : pas de canal SMS/email réel — voir RAPPORT-AUTONOME
@@ -130,12 +130,24 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
     showToast(t('gpx.exported', language), 'success', '📥');
   };
 
-  // Synthetic elevation for display (based on dplus + distance)
+  // Profil d'altitude — INDICATIF (panel V3 / Marc UTMB).
+  // Avant : Math.sin(x * Math.PI) qui dessinait un arc parfait identique sur
+  // tous les trails — trompeur (un trail ondulé 1500m D+ et un trail à 1
+  // sommet 1500m D+ ont des profils radicalement différents).
+  // Maintenant : profil pseudo-aléatoire dérivé du hash du nom + distance,
+  // pour qu'il soit *différent par trail* mais reste affiché comme INDICATIF.
+  // À remplacer par les vraies altitudes GPX quand on aura des coords [lat,lng,ele].
   const elevSteps = 18;
   const peakElev = parseInt(trail.dplus.replace(/[^0-9]/g, '')) || 500;
+  const baseElev = parseInt(trail.distance.replace(/[^0-9]/g, '')) > 50 ? 800 : 400;
+  // Hash simple du nom pour seed reproductible
+  const nameHash = trail.name.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
   const elevData = Array.from({ length: elevSteps }, (_, i) => {
     const x = i / (elevSteps - 1);
-    return Math.round(Math.sin(x * Math.PI) * peakElev + 500);
+    // Combine 2 sinus à fréquences différentes + seed pour profils variés
+    const wave1 = Math.sin(x * Math.PI * (1 + (Math.abs(nameHash) % 3)));
+    const wave2 = Math.sin(x * Math.PI * 4 + (nameHash % 7)) * 0.3;
+    return Math.round((wave1 + wave2) * peakElev * 0.5 + baseElev + peakElev * 0.5);
   });
 
   return (
@@ -220,10 +232,20 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
           )}
         </div>
 
-        {/* Elevation profile */}
+        {/* Elevation profile (indicatif tant qu'on n'a pas l'altitude GPX) */}
         <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
-          <h3 className="font-bold text-sm">📈 {t('trail.elevProfile', language)}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm">📈 {t('trail.elevProfile', language)}</h3>
+            <span className="text-[10px] text-gray-500 italic">
+              {language === 'fr' ? '(indicatif)' : '(indicative)'}
+            </span>
+          </div>
           <ElevationProfile data={elevData} ariaLabel={t('trail.elevProfile', language)} />
+          <p className="text-[10px] text-gray-500">
+            {language === 'fr'
+              ? `Profil simulé d'après ${trail.dplus} de D+. Données précises bientôt via les traces GPX.`
+              : `Simulated profile from ${trail.dplus} elevation gain. Accurate data coming soon via GPX tracks.`}
+          </p>
         </div>
 
         {/* Route reports from store + default seed */}
@@ -256,18 +278,44 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
           ))}
         </div>
 
-        {/* Participants */}
-        <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">
-          <h3 className="font-bold text-sm">👥 {t('trail.whoPlans', language)}</h3>
-          <div className="flex gap-2">
-            {DEFAULT_PARTICIPANTS.map(p => (
-              <button key={p.id} type="button" onClick={() => openUserProfile(p.id)}
-                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-lg hover:opacity-80 transition">
-                {p.avatar}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Participants — vrais Quick Match utilisateurs sur ce trail */}
+        {(() => {
+          // Filtre par spotId (si dispo) sinon par titre du spot (compat ancien data)
+          const trailMatches = quickMatches.filter(m =>
+            (m.spotId !== undefined && m.spotId === trail.id) ||
+            m.spotTitle === trail.name
+          );
+          // Aplatit auteur + participants en liste unique de noms
+          const uniqueNames = Array.from(new Set(
+            trailMatches.flatMap(m => [m.authorName, ...m.participants])
+          ));
+          return (
+            <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">
+              <h3 className="font-bold text-sm">👥 {t('trail.whoPlans', language)}</h3>
+              {uniqueNames.length === 0 ? (
+                <p className="text-xs text-gray-400">
+                  {language === 'fr'
+                    ? 'Personne n\'a encore publié de Quick Match sur ce spot. Sois le premier !'
+                    : 'No one has posted a Quick Match here yet. Be the first!'}
+                </p>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  {uniqueNames.slice(0, 8).map((name, idx) => {
+                    const initial = name.charAt(0).toUpperCase();
+                    const userId = trailMatches.find(m => m.authorName === name)?.authorId || `qm-${idx}`;
+                    return (
+                      <button key={`${name}-${idx}`} type="button" onClick={() => openUserProfile(userId)}
+                        title={name}
+                        className="w-12 h-12 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center text-sm font-bold text-[var(--accent)] hover:opacity-80 transition">
+                        {initial}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Spot Check-in */}
         <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">

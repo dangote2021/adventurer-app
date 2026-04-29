@@ -7,10 +7,6 @@ import {
   getAdventuresForSwipe,
   getWeatherConditions,
   getUpcomingEvents,
-  getTrainingPlans,
-  NEARBY_PEOPLE,
-  NEARBY_COACHES,
-  GEAR_SUGGESTIONS,
   INSPIRATION_POSTS,
   MAP_SPOTS
 } from '@/lib/mock-data';
@@ -192,7 +188,6 @@ export default function HomePage() {
   const visibleEvents = allEvents.filter(e => !dismissedEvents.includes(e.id));
 
   const weatherConditions = getWeatherConditions(selectedSports);
-  const plans = getTrainingPlans();
   const currentAdventure = adventures[activeAdventureIndex % adventures.length];
 
   // Handle swipe left/right on adventure cards
@@ -634,43 +629,48 @@ export default function HomePage() {
 
       </section>
 
-      {/* P2/P6: MINI-LIGUE HEBDO — masquée tant que l'utilisateur n'a aucune
-          activité loggée (panel #82 décision 1) : afficher des prénoms inventés
-          sur un leaderboard à un user qui n'a fait aucune activité créait une
-          impression de communauté simulée et plombait la confiance. Dès qu'il
-          y a au moins 1 activité, on peut commencer à donner du contexte. */}
+      {/* P2/P6: MINI-LIGUE HEBDO — refonte panel V3 (Léa/Marc/Aïcha consensus).
+          Avant : on affichait Julien P., Camille D., Luca M., Sarah B. — des
+          prénoms inventés positionnés autour du score de l'utilisateur, ce qui
+          créait l'impression d'une communauté active alors qu'on n'a personne.
+          Maintenant : on affiche uniquement le score de l'utilisateur + son
+          niveau (Bronze/Silver/Gold/Diamond) + un CTA pour inviter des amis.
+          Quand on aura un vrai leaderboard Supabase basé sur les amis ajoutés,
+          on remplacera ce bloc. Section gated par activityLog.length > 0. */}
       {activityLog.length > 0 && (
       <section className="px-4 sm:px-6 py-4">
         <div className="bg-gradient-to-br from-[#023E8A]/40 to-[#2D6A4F]/30 border border-blue-500/20 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              🏆 {language === 'fr' ? 'Mini-Ligue' : 'Mini-League'}
+              🏆 {language === 'fr' ? 'Ton niveau' : 'Your level'}
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${leagueLevel === 'diamond' ? 'bg-cyan-500/20 text-cyan-300' : leagueLevel === 'gold' ? 'bg-yellow-500/20 text-yellow-300' : leagueLevel === 'silver' ? 'bg-gray-300/20 text-gray-300' : 'bg-orange-800/30 text-orange-400'}`}>
                 {leagueLevel === 'diamond' ? '💎 Diamond' : leagueLevel === 'gold' ? '🥇 Gold' : leagueLevel === 'silver' ? '🥈 Silver' : '🥉 Bronze'}
               </span>
             </h3>
-            <span className="text-xs text-gray-400">#{leagueRank}</span>
           </div>
-          <div className="space-y-1.5 mb-3">
-            {[
-              { rank: 1, name: 'Julien P.', xp: leagueXP + 45, premium: true },
-              { rank: 2, name: 'Camille D.', xp: leagueXP + 22, premium: false },
-              { rank: 3, name: 'Luca M.', xp: leagueXP + 10, premium: false },
-              { rank: Math.max(4, leagueRank), name: userName || 'Toi', xp: leagueXP, me: true, premium: isPremium },
-              { rank: Math.max(5, leagueRank + 1), name: 'Sarah B.', xp: Math.max(0, leagueXP - 8), premium: false },
-            ].map((entry, idx) => (
-              <div key={idx} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${'me' in entry && entry.me ? 'bg-[var(--accent)]/20 border border-[var(--accent)]/30' : 'bg-white/5'}`}>
-                <span className={`w-5 font-bold ${entry.rank <= 3 ? 'text-yellow-400' : 'text-gray-500'}`}>{entry.rank}</span>
-                <span className={`flex-1 font-medium ${'me' in entry && entry.me ? 'text-[var(--accent)]' : 'text-white'}`}>
-                  {'me' in entry && entry.me ? (language === 'fr' ? '→ Toi' : '→ You') : entry.name}
-                  {entry.premium && <span className="ml-1 text-yellow-400">👑</span>}
-                </span>
-                <span className="text-gray-400">{entry.xp} XP</span>
-              </div>
-            ))}
+          <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[var(--accent)]/15 border border-[var(--accent)]/30 mb-3">
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)]/30 flex items-center justify-center text-lg font-bold text-[var(--accent)]">
+              {(userName || '?').charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white">{userName || (language === 'fr' ? 'Toi' : 'You')}{isPremium && <span className="ml-1 text-yellow-400">👑</span>}</p>
+              <p className="text-[11px] text-gray-400">{leagueXP} XP · {activityLog.length} {language === 'fr' ? 'activité(s) loggée(s)' : 'activity(ies) logged'}</p>
+            </div>
           </div>
-          <p className="text-[10px] text-gray-500 text-center">
-            {language === 'fr' ? 'Top 3 → promotion · Reset chaque lundi' : 'Top 3 → promoted · Resets every Monday'}
+          <button type="button" onClick={() => {
+            const shareText = language === 'fr'
+              ? 'Rejoins-moi sur Adventurer pour suivre nos aventures outdoor : https://adventurer.app'
+              : 'Join me on Adventurer to track our outdoor adventures: https://adventurer.app';
+            if (typeof navigator !== 'undefined' && (navigator as Navigator & { share?: (data: ShareData) => Promise<void> }).share) {
+              (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share({ title: 'Adventurer', text: shareText }).catch(() => {});
+            } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+              navigator.clipboard.writeText(shareText).then(() => showToast(language === 'fr' ? 'Lien copié !' : 'Link copied!', 'success', '📋'));
+            }
+          }} className="w-full py-2 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition">
+            👥 {language === 'fr' ? 'Inviter des amis pour créer ta ligue' : 'Invite friends to build your league'}
+          </button>
+          <p className="text-[10px] text-gray-500 text-center mt-2">
+            {language === 'fr' ? 'Le classement entre amis arrive bientôt' : 'Friend leaderboard coming soon'}
           </p>
         </div>
       </section>
@@ -1020,7 +1020,7 @@ export default function HomePage() {
                   </div>
                   <div className="px-4 py-2.5 bg-white/[0.02] border-t border-white/5 flex gap-2">
                     <button type="button" onClick={() => toggleSocialLike(post.id)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${liked ? 'bg-orange-500/20 text-orange-400 scale-105' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                      <span className={liked ? 'inline-block animate-bounce' : ''}>{liked ? '🔥' : '🔥'}</span> {post.likes + (liked ? 1 : 0)}
+                      <span className={liked ? 'inline-block animate-bounce' : ''}>{liked ? '🔥' : '🤍'}</span> {post.likes + (liked ? 1 : 0)}
                     </button>
                     <button type="button" onClick={() => showToast(fr ? 'Commentaires bientôt' : 'Comments soon', 'info', '💬')} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-white hover:bg-white/5 transition">
                       💬
@@ -1039,7 +1039,7 @@ export default function HomePage() {
                 {discoverFeed.length > 0 && (
                   <>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide pt-4">
-                      {fr ? 'Decouvrir aussi' : 'Discover also'}
+                      {fr ? 'Découvrir aussi' : 'Discover also'}
                     </h3>
                     {discoverFeed.map(renderPost)}
                   </>
