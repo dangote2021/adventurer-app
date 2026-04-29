@@ -225,8 +225,8 @@ export default function OnboardingScreen() {
           </h2>
           <p className="text-center text-gray-400 text-sm mb-8 max-w-xs">
             {language === 'fr'
-              ? 'Pour te montrer les spots, la météo et les aventuriers près de chez toi.'
-              : 'To show you spots, weather and adventurers near you.'}
+              ? 'Pour te montrer les spots et les conditions météo près de chez toi.'
+              : 'To show you spots and weather conditions near you.'}
           </p>
           <button
             type="button"
