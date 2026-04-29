@@ -232,21 +232,52 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
           )}
         </div>
 
-        {/* Elevation profile (indicatif tant qu'on n'a pas l'altitude GPX) */}
-        <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm">📈 {t('trail.elevProfile', language)}</h3>
-            <span className="text-[10px] text-gray-500 italic">
-              {language === 'fr' ? '(indicatif)' : '(indicative)'}
-            </span>
-          </div>
-          <ElevationProfile data={elevData} ariaLabel={t('trail.elevProfile', language)} />
-          <p className="text-[10px] text-gray-500">
-            {language === 'fr'
-              ? `Profil simulé d'après ${trail.dplus} de D+. Données précises bientôt via les traces GPX.`
-              : `Simulated profile from ${trail.dplus} elevation gain. Accurate data coming soon via GPX tracks.`}
-          </p>
-        </div>
+        {/* Profil d'altitude — gating multi-règles (panel V4 / Léa + Aïcha).
+            Léa : sur sport nautique (kite/surf/wing/voile/SUP/plongée…) un D+ et
+            une courbe d'altitude n'ont aucun sens. Aïcha : sur sport engagé
+            (Alpinisme, Ski-rando, Escalade glace, difficulté Expert) afficher
+            un profil simulé même labellisé "(indicatif)" est dangereux car la
+            personne peut planifier ses bivouacs / décisions en s'y fiant.
+            Règle : on cache complètement le bloc dans ces 2 cas. */}
+        {(() => {
+          const isNautical = nautical;
+          const dangerousSports = ['Alpinisme', 'Ski de rando', 'Escalade glace', 'Cascade de glace', 'Goulotte'];
+          const isEngagedSport = dangerousSports.includes(trail.sport);
+          const isExpert = trail.difficulty === 'Expert';
+          if (isNautical || isEngagedSport || isExpert) {
+            // Empty state honnête : on dit pourquoi on ne montre pas un faux profil
+            return (
+              <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
+                <h3 className="font-bold text-sm">📈 {t('trail.elevProfile', language)}</h3>
+                <p className="text-xs text-gray-400">
+                  {isNautical
+                    ? (language === 'fr'
+                        ? 'Sport nautique — pas de profil d\'altitude pertinent.'
+                        : 'Nautical sport — no relevant elevation profile.')
+                    : (language === 'fr'
+                        ? 'Sortie engagée : pas d\'estimation simulée. Utilise IGN / camptocamp / skitour pour planifier précisément.'
+                        : 'Committing route: no simulated estimate. Use IGN / camptocamp / skitour to plan accurately.')}
+                </p>
+              </div>
+            );
+          }
+          return (
+            <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-sm">📈 {t('trail.elevProfile', language)}</h3>
+                <span className="text-[10px] text-gray-500 italic">
+                  {language === 'fr' ? '(indicatif)' : '(indicative)'}
+                </span>
+              </div>
+              <ElevationProfile data={elevData} ariaLabel={t('trail.elevProfile', language)} />
+              <p className="text-[10px] text-gray-500">
+                {language === 'fr'
+                  ? `Profil simulé d'après ${trail.dplus} de D+. Données précises bientôt via les traces GPX.`
+                  : `Simulated profile from ${trail.dplus} elevation gain. Accurate data coming soon via GPX tracks.`}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Route reports from store + default seed */}
         <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">

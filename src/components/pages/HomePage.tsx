@@ -958,11 +958,43 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SOCIAL ACTIVITY FEED */}
+      {/* SOCIAL ACTIVITY FEED — gated par activityLog (panel V4 / Léa).
+          Avant : 12 profils hardcodés (Léa M., Thomas K. à Dakhla, Sarah M. à
+          Céüse 8a+...) servis comme un vrai feed d'amis. Anti-pattern identique
+          à la Mini-Ligue qu'on a fixée. Tant qu'on n'a pas un vrai feed
+          Supabase basé sur les amis ajoutés, on affiche un empty state clair
+          et un CTA d'invitation. Le code des 12 profils est conservé en
+          fallback pour quand activityLog > 0 (l'utilisateur a déjà loggé une
+          activité = signal qu'il s'engage), pour ne pas casser le scroll. */}
       <section className="px-4 sm:px-6 py-6">
         <h2 className="text-2xl font-bold text-white mb-4">
           {language === 'fr' ? '👥 Fil d\'activités' : '👥 Activity Feed'}
         </h2>
+        {activityLog.length === 0 ? (
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center space-y-3">
+            <div className="text-4xl">🏔️</div>
+            <h3 className="text-sm font-bold text-white">
+              {language === 'fr' ? 'Le fil de tes amis arrive bientôt' : 'Your friend feed is coming soon'}
+            </h3>
+            <p className="text-xs text-gray-400 max-w-xs mx-auto">
+              {language === 'fr'
+                ? 'Invite tes potes outdoor pour voir leurs sorties ici. En attendant, log ta première activité depuis Tracking.'
+                : 'Invite your outdoor friends to see their outings here. Meanwhile, log your first activity from Tracking.'}
+            </p>
+            <button type="button" onClick={() => {
+              const shareText = language === 'fr'
+                ? 'Rejoins-moi sur Adventurer pour suivre nos aventures outdoor : https://adventurer.app'
+                : 'Join me on Adventurer to track our outdoor adventures: https://adventurer.app';
+              if (typeof navigator !== 'undefined' && (navigator as Navigator & { share?: (data: ShareData) => Promise<void> }).share) {
+                (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share({ title: 'Adventurer', text: shareText }).catch(() => {});
+              } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                navigator.clipboard.writeText(shareText).then(() => showToast(language === 'fr' ? 'Lien copié !' : 'Link copied!', 'success', '📋'));
+              }
+            }} className="px-5 py-2 rounded-full bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition">
+              👥 {language === 'fr' ? 'Inviter mes amis' : 'Invite my friends'}
+            </button>
+          </div>
+        ) : (
         <div className="space-y-3">
           {(() => {
             const fr = language === 'fr';
@@ -1048,6 +1080,7 @@ export default function HomePage() {
             );
           })()}
         </div>
+        )}
       </section>
 
       {/* Badges moved to profile — mini-ligue, streak freeze and challenge moved up */}

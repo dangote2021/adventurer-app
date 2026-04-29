@@ -104,7 +104,7 @@ interface NominatimResult {
 }
 
 export default function ExplorePage() {
-  const { selectedSports, showToast, setPage, setSubPage, language, togglePlannedChallenge, isChallengePlanned, userLat, userLng, setUserLocation, geoPermission, setGeoPermission, userName, userChallenges, joinUserChallenge, leaveUserChallenge } = useStore();
+  const { selectedSports, showToast, setPage, setSubPage, language, togglePlannedChallenge, isChallengePlanned, userLat, userLng, setUserLocation, geoPermission, setGeoPermission, userName, userChallenges, joinUserChallenge, leaveUserChallenge, quickMatches } = useStore();
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('spots');
   const [searchQuery, setSearchQuery] = useState('');
@@ -573,29 +573,53 @@ export default function ExplorePage() {
                     <span className="text-sm text-blue-300 truncate">{spot.windStatus}</span>
                   </div>
                 )}
-                <div className="border-t border-[var(--border)] pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setSubPage({ type: 'trail-detail', trailId: spot.id })}
-                    className="w-full text-left"
-                    aria-label={fr ? 'Voir le spot et qui y va' : 'View spot and who is going'}
-                  >
-                    <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {['🏔️', '🧗', '🏃'].map((emoji, idx) => (
-                          <div
-                            key={idx}
-                            className="w-10 h-10 bg-[var(--accent)]/30 ring-2 ring-[var(--card)] rounded-full flex items-center justify-center text-lg"
-                          >
-                            {emoji}
+                {/* "Qui y va ce week-end" — vrais quickMatches du store
+                    (panel V4 / Léa). Avant : avatars hardcodés ['🏔️','🧗','🏃']
+                    affichés sur TOUS les spots indépendamment du sport (un user
+                    voyait un emoji escalade sur un spot kite). Maintenant : on
+                    filtre les Quick Match du store par spot, et on affiche les
+                    vraies initiales des publishers. Empty state honnête. */}
+                {(() => {
+                  const matchesForSpot = quickMatches.filter(m =>
+                    (m.spotId !== undefined && m.spotId === spot.id) ||
+                    m.spotTitle === spot.name
+                  );
+                  const uniqueNames = Array.from(new Set(
+                    matchesForSpot.flatMap(m => [m.authorName, ...m.participants])
+                  ));
+                  return (
+                    <div className="border-t border-[var(--border)] pt-3">
+                      <button
+                        type="button"
+                        onClick={() => setSubPage({ type: 'trail-detail', trailId: spot.id })}
+                        className="w-full text-left"
+                        aria-label={fr ? 'Voir le spot et qui y va' : 'View spot and who is going'}
+                      >
+                        <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
+                        {uniqueNames.length === 0 ? (
+                          <p className="text-xs text-gray-500">
+                            {fr ? 'Personne pour l\'instant — sois le premier à publier un Quick Match.' : 'No one yet — be the first to post a Quick Match.'}
+                          </p>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div className="flex -space-x-2">
+                              {uniqueNames.slice(0, 4).map((name, idx) => (
+                                <div
+                                  key={`${name}-${idx}`}
+                                  title={name}
+                                  className="w-10 h-10 bg-[var(--accent)]/30 ring-2 ring-[var(--card)] rounded-full flex items-center justify-center text-sm font-bold text-[var(--accent)]"
+                                >
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                              ))}
+                            </div>
+                            <span className="text-xs text-[var(--accent)] font-semibold ml-2">{fr ? 'Voir →' : 'See →'}</span>
                           </div>
-                        ))}
-                      </div>
-                      <span className="text-xs text-[var(--accent)] font-semibold ml-2">{fr ? 'Voir →' : 'See →'}</span>
+                        )}
+                      </button>
                     </div>
-                  </button>
-                </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -651,55 +675,9 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* OLD SPOTS TAB — removed, merged above */}
-        {false && (
-          <div className="space-y-4">
-            {filteredSpots.map((spot) => (
-              <div key={spot.id} className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)] hover:bg-white/5 transition-colors">
-                <div className="flex items-start gap-3 mb-3">
-                  <span className="text-2xl">{spot.emoji}</span>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-base text-white">{spot.name}</h3>
-                    <p className="text-gray-400 text-sm">{spot.type}</p>
-                    <div className="flex gap-1 mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className={i < spot.rating ? '⭐' : '☆'} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <span className="text-xs bg-[var(--accent)]/20 text-[var(--accent)] px-2 py-1 rounded">
-                    {getSportEmoji(spot.sport)} {spot.sport}
-                  </span>
-                </div>
-                <div className="border-t border-[var(--border)] pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setSubPage({ type: 'trail-detail', trailId: spot.id })}
-                    className="w-full text-left"
-                    aria-label={fr ? 'Voir le spot et qui y va' : 'View spot and who is going'}
-                  >
-                    <p className="text-sm font-semibold text-gray-300 mb-2">{t('explore.whoGoesWeekend', language)}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {['🪁', '🌊', '🏄'].map((emoji, idx) => (
-                          <div
-                            key={idx}
-                            className="w-10 h-10 bg-[var(--accent)]/30 ring-2 ring-[var(--card)] rounded-full flex items-center justify-center text-lg"
-                          >
-                            {emoji}
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-xs text-[var(--accent)] font-semibold ml-2">{fr ? 'Voir →' : 'See →'}</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* OLD SPOTS TAB removed (était `{false && (...)}`)
+            Bloc fusionné dans la liste principale au-dessus, pas de raison
+            de garder le code mort dans le bundle (panel V4 / Léa). */}
 
         {/* DEFIS TAB */}
         {activeCategory === 'defis' && (

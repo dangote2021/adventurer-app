@@ -634,10 +634,18 @@ export const useStore = create<AppState>()(
       removeQuickMatch: (id) => set({ quickMatches: get().quickMatches.filter(m => m.id !== id) }),
 
       setDefaultEmergencyContact: (name, phone) => {
+        // @deprecated panel #82 — UI safety check-in retirée tant que canal SMS/email pas branché
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[deprecated] setDefaultEmergencyContact called — see panel #82, no SMS/email channel yet. Do not re-wire UI without rebranching Twilio/Resend edge functions.');
+        }
         set({ defaultEmergencyContact: name.trim(), defaultEmergencyPhone: phone.trim() });
       },
 
       quickSafetyCheckIn: (routeTitle, sport, durationHours = 5) => {
+        // @deprecated panel #82 — UI safety check-in retirée tant que canal SMS/email pas branché
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[deprecated] quickSafetyCheckIn called — see panel #82, no SMS/email channel yet. Promise of "I\'ll alert your contact" is not honored client-side.');
+        }
         const s = get();
         // Pas de contact par défaut → impossible en 1 tap, l'UI doit ouvrir le modal complet
         if (!s.defaultEmergencyContact || !s.defaultEmergencyPhone) return null;
@@ -660,6 +668,10 @@ export const useStore = create<AppState>()(
       },
 
       addSafetyCheckIn: (c) => {
+        // @deprecated panel #82 — UI safety check-in retirée tant que canal SMS/email pas branché
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[deprecated] addSafetyCheckIn called — see panel #82, no SMS/email channel yet. Do not re-wire UI without Twilio/Resend edge functions.');
+        }
         const id = 'safe-' + Date.now();
         const entry: SafetyCheckIn = { ...c, id, createdAt: new Date().toISOString(), status: 'active' };
         // C2 — mémoriser le contact pour les futurs check-ins en 1 tap
@@ -671,6 +683,10 @@ export const useStore = create<AppState>()(
         return id;
       },
       completeSafetyCheckIn: (id) => {
+        // @deprecated panel #82 — UI safety check-in retirée tant que canal SMS/email pas branché
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[deprecated] completeSafetyCheckIn called — see panel #82, no SMS/email channel yet.');
+        }
         const list = get().safetyCheckIns.map(c => c.id === id ? { ...c, status: 'returned' as const } : c);
         set({ safetyCheckIns: list });
       },
