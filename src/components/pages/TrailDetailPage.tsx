@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { t, type Language } from '@/lib/i18n';
 import { GPX_ROUTES } from '@/lib/mock-data';
 import { estimateWeather, isNauticalSport, buildGPX, downloadGPX } from '@/lib/weather';
-import { QuickMatchModal, SafetyCheckInModal, RouteReportModal } from '@/components/modals/V2Modals';
+import { QuickMatchModal, RouteReportModal } from '@/components/modals/V2Modals';
 
 interface TrailDetailPageProps {
   trailId?: string | number;
@@ -63,7 +63,8 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
   const { closeSubPage, openUserProfile, showToast, language, routeReports } = useStore();
   const [joined, setJoined] = useState(false);
   const [showQuickMatch, setShowQuickMatch] = useState(false);
-  const [showSafety, setShowSafety] = useState(false);
+  // showSafety retiré : pas de canal SMS/email réel — voir RAPPORT-AUTONOME
+  // décision 3. À remettre quand l'edge function Supabase sera en place.
   const [showReport, setShowReport] = useState(false);
 
   const trail = useMemo(() => {
@@ -170,15 +171,12 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
       </div>
 
       <div className="px-4 space-y-4">
-        {/* V2 Action buttons */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* V2 Action buttons — bouton "Safety / Check-in" retiré tant qu'on n'a
+            pas un vrai canal SMS/email côté backend (panel #82 décision 3). */}
+        <div className="grid grid-cols-3 gap-2">
           <button type="button" onClick={() => setShowQuickMatch(true)}
             className="py-3 rounded-xl bg-[var(--accent)] text-white font-bold text-sm flex items-center justify-center gap-1.5">
             🤝 {t('trail.quickMatchBtn', language)}
-          </button>
-          <button type="button" onClick={() => setShowSafety(true)}
-            className="py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-1.5">
-            🛡️ {t('trail.safetyBtn', language)}
           </button>
           <button type="button" onClick={handleGPX}
             className="py-3 rounded-xl bg-white/5 text-white font-semibold text-sm flex items-center justify-center gap-1.5">
@@ -337,9 +335,7 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
       {showQuickMatch && (
         <QuickMatchModal spotTitle={trail.name} spotId={trail.id} sport={trail.sport} onClose={() => setShowQuickMatch(false)} />
       )}
-      {showSafety && (
-        <SafetyCheckInModal routeTitle={trail.name} sport={trail.sport} onClose={() => setShowSafety(false)} />
-      )}
+      {/* SafetyCheckInModal retiré (voir import + décision panel #82) */}
       {showReport && (
         <RouteReportModal routeId={trail.id} routeTitle={trail.name} onClose={() => setShowReport(false)} />
       )}

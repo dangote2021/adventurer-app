@@ -1,7 +1,7 @@
 import { Universe, Sport } from '@/types';
 
 export const SPORTS: Sport[] = [
-  // TERRE (28)
+  // TERRE (26)
   { name: 'Randonnée', emoji: '🥾', universe: 'TERRE' },
   { name: 'Trail', emoji: '🏃', universe: 'TERRE' },
   { name: 'Ultra-trail', emoji: '🏃‍♂️', universe: 'TERRE' },
@@ -17,18 +17,16 @@ export const SPORTS: Sport[] = [
   { name: 'Ski de fond', emoji: '🎿', universe: 'TERRE' },
   { name: 'Ski alpin', emoji: '⛷', universe: 'TERRE' },
   { name: 'Snowboard freeride', emoji: '🏂', universe: 'TERRE' },
-  { name: 'Raquettes', emoji: '🦶', universe: 'TERRE' },
+  { name: 'Raquettes', emoji: '❄️', universe: 'TERRE' },
   { name: 'Course à pied', emoji: '👟', universe: 'TERRE' },
   { name: 'Canicross', emoji: '🐕', universe: 'TERRE' },
   { name: 'Canyoning', emoji: '🏞️', universe: 'TERRE' },
   { name: 'Marche nordique', emoji: '🏃‍♀️', universe: 'TERRE' },
   { name: 'Trekking', emoji: '🗻', universe: 'TERRE' },
-  { name: 'Fastpacking', emoji: '💨', universe: 'TERRE' },
   { name: 'Orientation', emoji: '🧭', universe: 'TERRE' },
   { name: 'Spéléologie', emoji: '🕳️', universe: 'TERRE' },
   { name: 'Rando équestre', emoji: '🐎', universe: 'TERRE' },
   { name: 'Slackline', emoji: '🤸', universe: 'TERRE' },
-  { name: 'Camping', emoji: '⛺', universe: 'TERRE' },
   { name: 'Escalade glace', emoji: '🧊', universe: 'TERRE' },
 
   // MER (23)

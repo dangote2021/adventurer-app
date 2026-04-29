@@ -16,7 +16,10 @@ import {
 } from '@/lib/mock-data';
 import { getSportEmoji } from '@/lib/sports-config';
 import CreateChallengeModal from '@/components/ui/CreateChallengeModal';
-import { SafetyCheckInModal } from '@/components/modals/V2Modals';
+// SafetyCheckInModal retiré : tant qu'on n'a pas un canal de partage de
+// position réel (SMS/email via edge function), on ne veut pas faire la
+// promesse "tes proches sont alertés" alors qu'aucun message n'est envoyé.
+// Voir RAPPORT-AUTONOME-29-04-2026 décision 3.
 import {
   getSpots,
   getEvents,
@@ -29,10 +32,9 @@ import {
 } from '@/lib/supabase/queries';
 
 export default function HomePage() {
-  const { userName, selectedSports, setSubPage, showToast, language, dismissedAdventures, dismissedEvents, dismissAdventure, dismissEvent, togglePlannedAdventure, isAdventurePlanned, togglePlannedChallenge, isChallengePlanned, userLat, userLng, streakWeeks, tickStreak, monthlyGoal, monthlyProgress, monthlyGoalMonth, bumpMonthlyProgress, setMonthlyGoal, weeklyGoal, weeklyProgress, weeklyGoalWeek, inAppNotifications, lastActivitySummary, setLastActivitySummary, socialFeedLikes, toggleSocialLike, leagueLevel, leagueRank, leagueXP, streakFreezes, earnedBadges, isPremium, sponsoredChallengesJoined, joinSponsoredChallenge, isSponsoredChallengeJoined, userChallenges, joinUserChallenge, leaveUserChallenge, safetyCheckIns, defaultEmergencyContact, defaultEmergencyPhone, quickSafetyCheckIn, completeSafetyCheckIn, toggleActivityIntent, getIntentsFor, isUserIntending } = useStore();
+  const { userName, selectedSports, setSubPage, showToast, language, dismissedAdventures, dismissedEvents, dismissAdventure, dismissEvent, togglePlannedAdventure, isAdventurePlanned, togglePlannedChallenge, isChallengePlanned, userLat, userLng, streakWeeks, tickStreak, monthlyGoal, monthlyProgress, monthlyGoalMonth, bumpMonthlyProgress, setMonthlyGoal, weeklyGoal, weeklyProgress, weeklyGoalWeek, inAppNotifications, lastActivitySummary, setLastActivitySummary, socialFeedLikes, toggleSocialLike, leagueLevel, leagueRank, leagueXP, streakFreezes, earnedBadges, isPremium, sponsoredChallengesJoined, joinSponsoredChallenge, isSponsoredChallengeJoined, userChallenges, joinUserChallenge, leaveUserChallenge, activityLog, toggleActivityIntent, getIntentsFor, isUserIntending } = useStore();
 
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
-  const [showSafetyModal, setShowSafetyModal] = useState(false);
 
   // Tick streak on page load (once per week)
   useEffect(() => { tickStreak(); }, []);
@@ -524,43 +526,13 @@ export default function HomePage() {
         );
       })()}
 
-      {/* C2 — ACTIVE SAFETY CHECK-INS (compact banner, only if any active) */}
-      {safetyCheckIns.filter(c => c.status === 'active').length > 0 && (
-        <section className="px-4 sm:px-6 pt-3">
-          {safetyCheckIns.filter(c => c.status === 'active').slice(0, 2).map(c => {
-            const back = new Date(c.expectedReturnAt);
-            const hh = back.getHours().toString().padStart(2, '0');
-            const mm = back.getMinutes().toString().padStart(2, '0');
-            return (
-              <div key={c.id} className="bg-emerald-900/30 border border-emerald-600/40 rounded-2xl p-3 flex items-center gap-3 mb-2">
-                <span className="text-2xl">🛡️</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-emerald-300">
-                    {language === 'fr' ? 'Check-in actif' : 'Active check-in'} · {c.sport}
-                  </p>
-                  <p className="text-[11px] text-emerald-200/70 truncate">
-                    {language === 'fr' ? 'Retour prévu' : 'Back by'} {hh}:{mm} · {c.emergencyContact}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    completeSafetyCheckIn(c.id);
-                    showToast(language === 'fr' ? 'Bon retour ! 🙏' : 'Welcome back! 🙏', 'success', '✅');
-                  }}
-                  className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-500 transition"
-                >
-                  ✅ {language === 'fr' ? 'Rentré' : "I'm back"}
-                </button>
-              </div>
-            );
-          })}
-        </section>
-      )}
+      {/* C2 — bannière check-in actif RETIRÉE (panel #82 décision 3 / option B).
+          Le store conserve les check-ins pour usage futur quand on aura un
+          backend SMS/email réel — mais on n'expose plus de UI mensongère. */}
 
-      {/* SHORTCUTS — lean row: Plans, RDV, Quick Match, Safety */}
+      {/* SHORTCUTS — Plans, RDV, Quick Match (Check-in retiré, voir panel #82) */}
       <section className="px-4 sm:px-6 pt-2 pb-1">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button type="button" onClick={() => setSubPage('my-plans')}
             className="flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-[var(--card)] hover:bg-white/10 transition">
             <span className="text-2xl">📋</span>
@@ -577,36 +549,10 @@ export default function HomePage() {
             <span className="text-2xl">🤝</span>
             <span className="text-[11px] font-semibold text-center leading-tight">Quick Match</span>
           </button>
-          {/* C2 — Check-in sécurité 1-tap */}
-          <button
-            type="button"
-            onClick={() => {
-              if (defaultEmergencyContact && defaultEmergencyPhone) {
-                // 1 tap: réutilise le contact mémorisé, 5h par défaut
-                const routeLabel = heroCity || (language === 'fr' ? 'Sortie' : 'Outing');
-                const sportLabel = selectedSports[0] || 'Outdoor';
-                const id = quickSafetyCheckIn(routeLabel, sportLabel, 5);
-                if (id) {
-                  showToast(
-                    language === 'fr'
-                      ? `Check-in activé 5h · ${defaultEmergencyContact} prévenu·e`
-                      : `Check-in on 5h · ${defaultEmergencyContact} alerted`,
-                    'success',
-                    '🛡️'
-                  );
-                }
-              } else {
-                // Premier check-in: ouvre le modal complet pour saisir le contact
-                setShowSafetyModal(true);
-              }
-            }}
-            className="relative flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-emerald-900/30 border border-emerald-600/30 hover:bg-emerald-800/30 transition"
-          >
-            <span className="text-2xl">🛡️</span>
-            <span className="text-[11px] font-semibold text-center leading-tight text-emerald-200">
-              {language === 'fr' ? 'Check-in' : 'Check-in'}
-            </span>
-          </button>
+          {/* Bouton Check-in sécurité retiré : pas de canal SMS/email réel
+              côté backend, donc le toast "contact prévenu" était mensonger.
+              On le remettra dès qu'on aura un edge function Supabase qui
+              déclenche réellement un SMS Twilio + email Resend. */}
         </div>
       </section>
 
@@ -688,7 +634,12 @@ export default function HomePage() {
 
       </section>
 
-      {/* P2/P6: MINI-LIGUE HEBDO — moved up for retention */}
+      {/* P2/P6: MINI-LIGUE HEBDO — masquée tant que l'utilisateur n'a aucune
+          activité loggée (panel #82 décision 1) : afficher des prénoms inventés
+          sur un leaderboard à un user qui n'a fait aucune activité créait une
+          impression de communauté simulée et plombait la confiance. Dès qu'il
+          y a au moins 1 activité, on peut commencer à donner du contexte. */}
+      {activityLog.length > 0 && (
       <section className="px-4 sm:px-6 py-4">
         <div className="bg-gradient-to-br from-[#023E8A]/40 to-[#2D6A4F]/30 border border-blue-500/20 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
@@ -723,6 +674,7 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+      )}
 
       {/* STREAK FREEZE INDICATOR — moved up */}
       {streakWeeks >= 2 && (
@@ -746,45 +698,12 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* P6: SPONSORED CHALLENGE — moved up */}
-      <section className="px-4 sm:px-6 py-4">
-        {(() => {
-          const fr = language === 'fr';
-          const trailKm = Math.round(useStore.getState().activityLog.filter(a => a.sport.toLowerCase().includes('trail')).reduce((sum, a) => { const d = a.distance ? parseFloat(a.distance.replace(/[^\d.]/g, '')) : 0; return sum + d; }, 0));
-          const progress = Math.min(100, Math.round((trailKm / 100) * 100));
-          const joined = isSponsoredChallengeJoined('sc-salomon');
-          return (
-            <div className="bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-500/20 rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🏔️</span>
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400">{fr ? 'Challenge Sponsorisé' : 'Sponsored Challenge'}</span>
-                <span className="ml-auto text-xs text-gray-500">847 {fr ? 'inscrits' : 'joined'}</span>
-              </div>
-              <h3 className="font-bold text-sm text-white mb-1">{fr ? 'Défi Salomon — 100km de trail ce mois' : 'Salomon Challenge — 100km trail this month'}</h3>
-              <p className="text-xs text-gray-400 mb-3">{fr ? 'Cumule 100km de trail → code -30% salomon.com' : 'Accumulate 100km trail → 30% off salomon.com'}</p>
-              <span className="inline-block px-2.5 py-1 bg-white/10 text-white text-xs font-bold rounded-full mb-3">🎁 -30% Salomon</span>
-              {joined && (
-                <div className="mb-3">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-gray-400">{trailKm}/100 km</span>
-                    <span className="text-white font-bold">{progress}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-red-500 to-orange-500 transition-all" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => { if (!joined) { joinSponsoredChallenge('sc-salomon'); showToast(fr ? 'Défi rejoint !' : 'Challenge joined!', 'success', '🏆'); } }}
-                className={`w-full py-2.5 rounded-xl text-sm font-bold transition ${joined ? 'bg-green-600/20 text-green-400 border border-green-500/30' : 'bg-white/10 text-white hover:bg-white/15'}`}
-              >
-                {joined ? (fr ? '✅ Inscrit' : '✅ Joined') : (fr ? 'Rejoindre le défi' : 'Join challenge')}
-              </button>
-            </div>
-          );
-        })()}
-      </section>
+      {/* P6: SPONSORED CHALLENGE — masqué tant qu'on n'a pas de vrai partenariat
+          signé avec Salomon (le "847 inscrits" était hardcodé, et on cible un
+          sport qui peut ne pas être dans les sports cochés). À réactiver quand :
+          1) un vrai partenariat existe, 2) on a un compteur de participants
+          réel via Supabase, 3) on filtre par sport coché.
+          Voir panel #82 décision 1. */}
 
       {/* 3. AVENTURE DU JOUR */}
       <section ref={adventureSectionRef} className="px-4 sm:px-6 py-6">
@@ -996,13 +915,6 @@ export default function HomePage() {
 
       {/* Create Challenge Modal */}
       {showCreateChallenge && <CreateChallengeModal onClose={() => setShowCreateChallenge(false)} />}
-      {showSafetyModal && (
-        <SafetyCheckInModal
-          routeTitle={heroCity || (language === 'fr' ? 'Sortie' : 'Outing')}
-          sport={selectedSports[0] || 'Outdoor'}
-          onClose={() => setShowSafetyModal(false)}
-        />
-      )}
 
       {/* P2: Coaches, Plans, Gear moved to Explorer page — feed is now focused on retention */}
 
