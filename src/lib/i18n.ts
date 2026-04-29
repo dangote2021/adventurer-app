@@ -337,13 +337,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'cookie.privacy': 'Confidentialité',
     'cookie.cgu': 'CGU',
 
-    // TopBar / SOS
-    'topbar.sos': 'Urgence',
-    'topbar.sosDesc': 'En cas de danger immédiat, contactez les secours.',
-    'topbar.call112': 'Appeler le 112',
-    'topbar.callSamu': 'SAMU — 15',
-    'topbar.sharePosition': 'Partager ma position',
-    'topbar.positionShared': 'Position GPS partagée avec vos contacts d\'urgence',
+    // TopBar — clés SOS retirées (panel #82 / Aïcha) : tant qu'on n'a pas un
+    // canal SMS/email back-end, on ne veut pas les exposer.
     'topbar.close': 'Fermer',
     'topbar.notifications': 'Notifications',
     'topbar.allNotifications': 'Voir toutes les notifications',
@@ -459,18 +454,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'qm.participants': 'participants',
     'qm.tous': 'Tous niveaux',
 
-    // V2 — Safety check-in
-    'safety.title': 'Check-in sécurité',
-    'safety.startAt': 'Départ',
-    'safety.returnAt': 'Retour prévu',
-    'safety.contact': 'Contact d\'urgence',
-    'safety.contactPhone': 'Téléphone',
-    'safety.activate': 'Activer le check-in',
-    'safety.activated': 'Check-in activé. On alertera ton contact si pas de retour',
-    'safety.returned': 'Je suis rentré',
-    'safety.returnedConfirm': 'Merci, check-in clôturé',
-    'safety.active': 'Check-in actif',
-    'safety.freeForever': 'Gratuit et sans engagement — pour toujours',
+    // V2 — Safety check-in : clés retirées tant qu'on n'a pas le canal réel.
 
     // V2 — Route reports
     'report.title': 'Laisser un retour terrain',
@@ -539,7 +523,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'trail.joinedPlan': 'Sortie ajoutée au calendrier',
     'trail.shareCopied': 'Route copiée',
     'trail.quickMatchBtn': 'Quick Match',
-    'trail.safetyBtn': 'Sécurité',
     'trail.reportBtn': 'Retour',
     'trail.meteoLabel': 'Météo',
     'trail.humidityShort': 'hum.',
@@ -643,9 +626,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'booking.day.fri': 'Ven',
     'booking.day.sat': 'Sam',
 
-    // V3 — Safety / Report placeholders
-    'safety.contactPlaceholder': 'Prénom Nom',
-    'safety.contactRequired': 'Contact et téléphone requis',
+    // V3 — Report placeholders (safety placeholders retirés)
     'report.conditionsPlaceholder': 'Ex: Sec, vent fort passage du col',
     'report.conditionsRequired': 'Décris les conditions',
 
@@ -991,13 +972,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'cookie.privacy': 'Privacy',
     'cookie.cgu': 'Terms',
 
-    // TopBar / SOS
-    'topbar.sos': 'Emergency',
-    'topbar.sosDesc': 'In case of immediate danger, contact emergency services.',
-    'topbar.call112': 'Call 112',
-    'topbar.callSamu': 'Emergency — 15',
-    'topbar.sharePosition': 'Share my position',
-    'topbar.positionShared': 'GPS position shared with your emergency contacts',
+    // TopBar — SOS keys removed (panel #82 / Aïcha decision)
     'topbar.close': 'Close',
     'topbar.notifications': 'Notifications',
     'topbar.allNotifications': 'View all notifications',
@@ -1113,18 +1088,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'qm.participants': 'participants',
     'qm.tous': 'All levels',
 
-    // V2 — Safety check-in
-    'safety.title': 'Safety check-in',
-    'safety.startAt': 'Departure',
-    'safety.returnAt': 'Expected return',
-    'safety.contact': 'Emergency contact',
-    'safety.contactPhone': 'Phone',
-    'safety.activate': 'Activate check-in',
-    'safety.activated': 'Check-in active. We\'ll alert your contact if no check-back',
-    'safety.returned': 'I\'m back',
-    'safety.returnedConfirm': 'Thanks, check-in closed',
-    'safety.active': 'Check-in active',
-    'safety.freeForever': 'Free forever — no commitment',
+    // V2 — Safety check-in : keys removed until real backend channel exists.
 
     // V2 — Route reports
     'report.title': 'Leave a trip report',
@@ -1193,7 +1157,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'trail.joinedPlan': 'Outing added to your calendar',
     'trail.shareCopied': 'Route copied',
     'trail.quickMatchBtn': 'Quick Match',
-    'trail.safetyBtn': 'Safety',
     'trail.reportBtn': 'Report',
     'trail.meteoLabel': 'Weather',
     'trail.humidityShort': 'hum.',
@@ -1297,9 +1260,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'booking.day.fri': 'Fri',
     'booking.day.sat': 'Sat',
 
-    // V3 — Safety / Report placeholders
-    'safety.contactPlaceholder': 'First Last',
-    'safety.contactRequired': 'Contact and phone required',
+    // V3 — Report placeholders (safety placeholders removed)
     'report.conditionsPlaceholder': 'e.g.: Dry, strong wind at the pass',
     'report.conditionsRequired': 'Describe the conditions',
 

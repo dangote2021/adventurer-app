@@ -34,7 +34,11 @@ const DEFAULTS: NotifPrefs = {
   channels: {
     weatherWindow: true,
     avalancheRisk: true,
-    checkinReminder: true,
+    // checkinReminder désactivé par défaut — panel #82 / Aïcha (urgentiste-alpiniste).
+    // L'UI de check-in sécurité a été retirée tant que le canal SMS (Twilio) /
+    // email (Resend) n'est pas branché côté edge function Supabase. Ne pas remettre
+    // à true sans backend opérationnel : faux filet de sécurité = biais d'optimisme.
+    checkinReminder: false,
     nearbySpot: false,
     friendActivity: true,
     challenge: false,

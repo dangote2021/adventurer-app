@@ -92,76 +92,12 @@ export function QuickMatchModal({ spotTitle, spotId, sport, onClose }: {
   );
 }
 
-// ------- Safety Check-in Modal -------
-export function SafetyCheckInModal({ routeTitle, sport, onClose }: {
-  routeTitle: string; sport: string; onClose: () => void;
-}) {
-  const { language, addSafetyCheckIn, showToast, defaultEmergencyContact, defaultEmergencyPhone } = useStore();
-  const [start, setStart] = useState(() => {
-    const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0);
-    return d.toISOString().slice(0, 16);
-  });
-  const [end, setEnd] = useState(() => {
-    const d = new Date(); d.setHours(d.getHours() + 5, 0, 0, 0);
-    return d.toISOString().slice(0, 16);
-  });
-  // C2 — pré-remplir avec le contact sauvegardé pour le check-in en 1 tap
-  const [contact, setContact] = useState(defaultEmergencyContact || '');
-  const [phone, setPhone] = useState(defaultEmergencyPhone || '');
-
-  const handleSubmit = () => {
-    if (!contact.trim() || !phone.trim()) {
-      showToast(t('safety.contactRequired', language), 'warning', '⚠️');
-      return;
-    }
-    addSafetyCheckIn({
-      routeTitle,
-      sport,
-      startAt: new Date(start).toISOString(),
-      expectedReturnAt: new Date(end).toISOString(),
-      emergencyContact: contact.trim(),
-      emergencyPhone: phone.trim(),
-    });
-    showToast(t('safety.activated', language), 'success', '🛡️');
-    onClose();
-  };
-
-  return (
-    <ModalShell title={`🛡️ ${t('safety.title', language)}`} onClose={onClose} language={language}>
-      <div className="bg-emerald-900/20 border border-emerald-800/30 rounded-xl p-3 mb-4 flex items-start gap-2">
-        <span className="text-lg">🤍</span>
-        <p className="text-xs text-emerald-300">{t('safety.freeForever', language)}</p>
-      </div>
-      <div className="space-y-4">
-        <div>
-          <label className="text-xs text-gray-400 block mb-1">{t('safety.startAt', language)}</label>
-          <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)}
-            className="w-full bg-white/5 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-400 block mb-1">{t('safety.returnAt', language)}</label>
-          <input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)}
-            className="w-full bg-white/5 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-400 block mb-1">{t('safety.contact', language)}</label>
-          <input type="text" value={contact} onChange={e => setContact(e.target.value)}
-            placeholder={t('safety.contactPlaceholder', language)}
-            className="w-full bg-white/5 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-400 block mb-1">{t('safety.contactPhone', language)}</label>
-          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-            placeholder="+33 6 12 34 56 78"
-            className="w-full bg-white/5 rounded-lg px-3 py-2 text-sm" />
-        </div>
-        <button type="button" onClick={handleSubmit} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold">
-          🛡️ {t('safety.activate', language)}
-        </button>
-      </div>
-    </ModalShell>
-  );
-}
+// SafetyCheckInModal SUPPRIMÉE — panel #82 / Aïcha (urgentiste-alpiniste).
+// Plus aucun caller dans l'app, et garder un composant "Tes proches sont
+// alertés" dans le bundle créerait un faux filet de sécurité (biais
+// d'optimisme documenté en médecine d'urgence). Quand on aura le canal SMS
+// (Twilio) + email (Resend) via une edge function Supabase, on remettra
+// un composant SECOURS PARTAGE POSITION qui fait *vraiment* quelque chose.
 
 // ------- Route Report Modal -------
 export function RouteReportModal({ routeId, routeTitle, onClose }: {

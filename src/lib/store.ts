@@ -319,10 +319,13 @@ interface AppState {
   addQuickMatch: (m: Omit<QuickMatch, 'id' | 'createdAt' | 'participants'>) => string;
   joinQuickMatch: (id: string, userName: string) => void;
   removeQuickMatch: (id: string) => void;
+  /** @deprecated panel #82 — UI retirée. Reconnecter à un edge function SMS/email avant de remettre en service. */
   addSafetyCheckIn: (c: Omit<SafetyCheckIn, 'id' | 'createdAt' | 'status'>) => string;
+  /** @deprecated panel #82 — voir addSafetyCheckIn */
   completeSafetyCheckIn: (id: string) => void;
+  /** @deprecated panel #82 — voir addSafetyCheckIn */
   setDefaultEmergencyContact: (name: string, phone: string) => void;
-  // C2 — quick 1-tap check-in quand le contact par défaut est défini
+  /** @deprecated panel #82 — voir addSafetyCheckIn */
   quickSafetyCheckIn: (routeTitle: string, sport: string, durationHours?: number) => string | null;
   // C1 — Activity intents API
   toggleActivityIntent: (params: { targetType: 'spot' | 'event' | 'defi'; targetId: string | number; targetTitle: string; sport: string; plannedDate?: string }) => boolean;
@@ -1110,9 +1113,10 @@ export const useStore = create<AppState>()(
         hasSeenTutorial: state.hasSeenTutorial,
         savedPlans: state.savedPlans,
         quickMatches: state.quickMatches,
-        safetyCheckIns: state.safetyCheckIns,
-        defaultEmergencyContact: state.defaultEmergencyContact,
-        defaultEmergencyPhone: state.defaultEmergencyPhone,
+        // safetyCheckIns/defaultEmergencyContact/Phone retirés du persist :
+        // panel #82 — tant qu'aucune UI n'expose la feature, on ne veut pas
+        // continuer à hydrater du JSON safety dans le localStorage des users.
+        // Les fonctions du store sont conservées mais @deprecated.
         activityIntents: state.activityIntents,
         coachBookings: state.coachBookings,
         marketplaceThreads: state.marketplaceThreads,
