@@ -68,11 +68,42 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
 
   const trail = useMemo(() => {
     if (trailId) {
-      const r = GPX_ROUTES.find(gr => gr.id === trailId);
+      // Match permissif (string vs number)
+      const r = GPX_ROUTES.find(gr => String(gr.id) === String(trailId));
       if (r) return r;
     }
-    return GPX_ROUTES[0];
+    return null;
   }, [trailId]);
+
+  // Empty state si l'id ne correspond à aucun trail/spot (ex: clic sur spot
+  // Supabase qui n'a pas de fiche dédiée encore — on évitait avant de tomber
+  // silencieusement sur GPX_ROUTES[0], ce qui faisait croire à un mauvais spot).
+  if (!trail) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] max-w-[430px] mx-auto pb-8 flex flex-col">
+        <div className="p-4">
+          <button type="button" onClick={closeSubPage}
+            className="w-9 h-9 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center hover:bg-black/20 dark:hover:bg-white/20 transition"
+            aria-label={t('common.back', language)}>←</button>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-3">
+          <div className="text-5xl">🗺️</div>
+          <h2 className="text-lg font-bold text-[var(--text)]">
+            {language === 'en' ? 'Spot not available yet' : 'Spot pas encore détaillé'}
+          </h2>
+          <p className="text-sm text-[var(--text-muted)] max-w-xs">
+            {language === 'en'
+              ? "We don't have a full sheet for this spot yet. Head back to the map to find another."
+              : "On n'a pas encore de fiche complète pour ce spot. Retour à la carte pour en trouver un autre."}
+          </p>
+          <button type="button" onClick={closeSubPage}
+            className="mt-2 px-5 py-2.5 rounded-full bg-[var(--brand)] text-white text-sm font-semibold hover:opacity-90 transition">
+            {language === 'en' ? 'Back to map' : 'Retour à la carte'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const nautical = isNauticalSport(trail.sport);
   const avgLat = trail.coordinates.reduce((s, c) => s + c[0], 0) / trail.coordinates.length;

@@ -6,6 +6,8 @@ import { t } from '@/lib/i18n';
 import { SPORTS, UNIVERSE_CONFIG, getSportsByUniverse } from '@/lib/sports-config';
 import { Universe } from '@/types';
 import { getAdventuresForSwipe } from '@/lib/mock-data';
+import { saveUserSports } from '@/lib/supabase/queries';
+import { supabase } from '@/lib/supabase/client';
 
 type Step = 'sports' | 'vision' | 'level' | 'location' | 'discovery';
 type Level = 'debutant' | 'intermediaire' | 'confirme';
@@ -13,7 +15,7 @@ type Level = 'debutant' | 'intermediaire' | 'confirme';
 const universes: Universe[] = ['TERRE', 'MER', 'AIR'];
 
 export default function OnboardingScreen() {
-  const { completeOnboarding, showToast, language, setLanguage, setUserLocation, setGeoPermission, setGlobalLevel, setSportLevel, setSubPage } = useStore();
+  const { completeOnboarding, showToast, language, setLanguage, setUserLocation, setGeoPermission, setGlobalLevel, setSportLevel, setSubPage, setPage } = useStore();
   const [step, setStep] = useState<Step>('sports');
   const [currentUniverse, setCurrentUniverse] = useState<Universe>('TERRE');
   const [selected, setSelected] = useState<string[]>([]);
@@ -60,6 +62,11 @@ export default function OnboardingScreen() {
 
   const handleSkipOnboarding = () => {
     completeOnboarding([]);
+    // Mark onboarding as explicitly skipped in Supabase user_metadata so the
+    // AuthBridge doesn't re-trigger onboarding on next login (no sports row needed).
+    supabase.auth.updateUser({ data: { onboarded: true } }).catch(err => {
+      console.warn('[onboarding] mark skip failed:', err?.message);
+    });
   };
 
   const requestGeolocation = () => {
@@ -92,7 +99,21 @@ export default function OnboardingScreen() {
       const level = perSportLevels[sport] || 'intermediaire';
       setSportLevel(sport, level);
     }
-    completeOnboarding(selected.length > 0 ? selected : []);
+    const finalSports = selected.length > 0 ? selected : [];
+    completeOnboarding(finalSports);
+    // Persist to Supabase so onboarding state survives across devices/sessions
+    // (otherwise a fresh login on a new device would re-trigger onboarding)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.id) {
+        saveUserSports(user.id, finalSports).catch(err => {
+          console.warn('[onboarding] saveUserSports failed:', err?.message);
+        });
+      }
+    });
+    // Always flag the user as onboarded in user_metadata, even if they ended up with 0 sports
+    supabase.auth.updateUser({ data: { onboarded: true } }).catch(err => {
+      console.warn('[onboarding] mark onboarded failed:', err?.message);
+    });
     setStep('discovery');
     setTimeout(() => setDiscoveryReady(true), 600);
   };
@@ -167,7 +188,14 @@ export default function OnboardingScreen() {
           <div className="px-4 pb-6 mt-auto space-y-3">
             <button
               type="button"
-              onClick={() => setStep('discovery')} // already on home, this closes onboarding
+              onClick={() => {
+                // Re-flag l'onboarding comme complete (idempotent) puis envoie
+                // l'utilisateur sur Explore pour qu'il commence vraiment l'app.
+                // Avant : setStep('discovery') ne faisait rien (déjà sur discovery)
+                // → le bouton paraissait cassé, signalé par le panel virtuel.
+                completeOnboarding(selected);
+                setPage('explore');
+              }}
               className="w-full py-4 bg-gradient-to-r from-[#F77F00] to-[#FFB703] text-[#1B4332] rounded-2xl font-black text-lg hover:opacity-90 transition shadow-lg shadow-[#F77F00]/20"
             >
               {language === 'fr' ? '🚀 Trouve-moi une aventure !' : '🚀 Find me an adventure!'}

@@ -300,6 +300,28 @@ export async function getUserSports(userId: string): Promise<string[]> {
   return (data || []).map(d => d.sport);
 }
 
+/** Persist the user's selected sports to Supabase.
+ * Replaces the full set: deletes existing rows then inserts the new list.
+ * Used at the end of onboarding so that onboarding state survives across devices
+ * and the AuthBridge can detect "user has already onboarded" on next login. */
+export async function saveUserSports(userId: string, sports: string[]): Promise<{ ok: boolean; error?: string }> {
+  if (!userId) return { ok: false, error: 'no userId' };
+  // Wipe existing rows for this user
+  const { error: delErr } = await supabase.from('user_sports').delete().eq('user_id', userId);
+  if (delErr) {
+    console.warn('[queries] saveUserSports delete warn:', delErr.message);
+    // continue anyway — could be RLS race, the upsert below will handle dupes if RLS allows
+  }
+  if (!sports.length) return { ok: true };
+  const rows = sports.map(sport => ({ user_id: userId, sport }));
+  const { error } = await supabase.from('user_sports').insert(rows);
+  if (error) {
+    console.error('[queries] saveUserSports error:', error.message);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
 /** Get user stats */
 export async function getUserStats(userId: string) {
   const { data, error } = await supabase

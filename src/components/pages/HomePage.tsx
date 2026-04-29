@@ -78,7 +78,12 @@ export default function HomePage() {
   // Prefer Supabase spots, fallback to mock MAP_SPOTS
   const spotsPool = supabaseSpots.length > 0 ? supabaseSpots : MAP_SPOTS;
   const userSpots = spotsPool.filter(s => selectedSports.includes(s.sport));
-  const spotOfWeek = userSpots.length > 0 ? userSpots[weekNum % userSpots.length] : spotsPool[weekNum % spotsPool.length];
+  // On ne pioche un spot hors-sport que si l'utilisateur n'a coché AUCUN sport.
+  // Sinon on préfère masquer la section (spotOfWeek = null) plutôt que de
+  // proposer un spot kite à un trail-runner.
+  const spotOfWeek = userSpots.length > 0
+    ? userSpots[weekNum % userSpots.length]
+    : (selectedSports.length === 0 ? spotsPool[weekNum % spotsPool.length] : null);
 
   // Weekly goal
   const currentWeekStr = (() => { const now = new Date(); const jan1 = new Date(now.getFullYear(), 0, 1); const wk = Math.ceil((((now.getTime() - jan1.getTime()) / 86400000) + jan1.getDay() + 1) / 7); return now.getFullYear() + '-W' + String(wk).padStart(2, '0'); })();

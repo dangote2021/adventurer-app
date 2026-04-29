@@ -3,6 +3,7 @@
 import { useStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-provider';
+import { getUserSports } from '@/lib/supabase/queries';
 
 import AuthPage from '@/components/layout/AuthPage';
 import OnboardingScreen from '@/components/onboarding/OnboardingScreen';
@@ -52,7 +53,43 @@ function AuthBridge() {
       const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Aventurier';
       const email = user.email || '';
       const method = user.app_metadata?.provider === 'google' ? 'google' : 'email';
+
+      // Fetch real onboarding state from Supabase (source of truth).
+      // Without this, a user logging in for the first time on a device
+      // where another user previously completed onboarding would be sent
+      // straight to the feed (because hasCompletedOnboarding=true is persisted in localStorage).
+      // We override with the DB truth: if no user_sports rows → force onboarding.
+      const previousEmail = useStore.getState().userEmail;
+      const isUserChange = previousEmail && previousEmail !== email;
+
+      // Optimistic: log in immediately so the UI shows logged-in state
       login(method as 'google' | 'email', name, email);
+
+      // Then reconcile onboarding state from Supabase
+      const wasOnboardedFlag = !!(user.user_metadata && user.user_metadata.onboarded === true);
+      getUserSports(user.id)
+        .then((sports) => {
+          if (sports.length > 0) {
+            // User already onboarded on a previous session/device — keep their sports
+            useStore.setState({ hasCompletedOnboarding: true, selectedSports: sports });
+          } else if (wasOnboardedFlag) {
+            // User went through onboarding but skipped sport selection — don't re-prompt
+            useStore.setState({ hasCompletedOnboarding: true, selectedSports: [] });
+          } else {
+            // No sports AND no onboarded flag → genuine first login, force onboarding flow.
+            useStore.setState({
+              hasCompletedOnboarding: false,
+              selectedSports: isUserChange ? [] : useStore.getState().selectedSports,
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('[AuthBridge] getUserSports failed, falling back to local state:', err?.message);
+          // On error, if it's a brand new user (different email), force onboarding rather than risk skipping it
+          if (isUserChange) {
+            useStore.setState({ hasCompletedOnboarding: false, selectedSports: [] });
+          }
+        });
     } else if (!session && !loading && isLoggedIn) {
       // Supabase session ended but Zustand still thinks we're logged in
       // Only logout if the user wasn't logged in via guest mode
