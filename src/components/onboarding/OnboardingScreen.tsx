@@ -274,9 +274,9 @@ export default function OnboardingScreen() {
         desc: 'Inspiration, community, challenges, coaching and gear — in one place.',
         descFr: 'Inspiration, communauté, défis, coaching et matos — au même endroit.',
         bullets: [
-          { icon: '✨', fr: 'Coach IA perso selon ton objectif', en: 'AI coach tailored to your goal' },
+          { icon: '✨', fr: 'Un coach IA qui construit ton plan d\'entraînement', en: 'An AI coach who builds your training plan' },
           { icon: '🤝', fr: 'Trouve des partenaires d\'aventure', en: 'Find adventure partners' },
-          { icon: '🎯', fr: 'Défis adaptés à ton niveau', en: 'Challenges matched to your level' },
+          { icon: '🎯', fr: 'Trouve des défis adaptés à tes envies et à ton niveau', en: 'Find challenges that match your goals and your level' },
         ],
         gradient: 'from-[#1B4332] to-[#2D6A4F]',
       },
@@ -300,13 +300,13 @@ export default function OnboardingScreen() {
         tag: 'AFTER',
         tagFr: 'APRÈS',
         title: 'Share your story',
-        titleFr: 'Valorise ton aventure',
-        desc: 'Auto recap, visual journal, badges that count and a community that cheers.',
-        descFr: 'Récap auto, carnet visuel, badges qui comptent et une communauté qui célèbre.',
+        titleFr: 'Partage ton aventure',
+        desc: 'A visual journal, a few badges that mean something, and your stories shared with people who matter.',
+        descFr: 'Un carnet visuel, quelques badges qui ont du sens, et tes récits partagés avec les gens qui comptent.',
         bullets: [
           { icon: '📖', fr: 'Carnet d\'aventure visuel + photos', en: 'Visual adventure journal + photos' },
-          { icon: '🏅', fr: 'Badges terrain (pas de XP bidon)', en: 'Real field badges (no fake XP)' },
-          { icon: '💬', fr: 'Partage avec tes proches & la team', en: 'Share with friends & your team' },
+          { icon: '🏅', fr: 'Quelques badges qui ont du sens', en: 'A few badges that actually mean something' },
+          { icon: '💬', fr: 'Partage avec tes proches & ta team', en: 'Share with friends & your team' },
         ],
         gradient: 'from-[#F77F00] to-[#D65A1A]',
       },
@@ -441,10 +441,14 @@ export default function OnboardingScreen() {
 
   // ==== STEP 2: LEVEL (P11: per-sport) ====
   if (step === 'level') {
+    // Reformulation panel V6 (utilisateur réel) : "niveau" est anxiogène et
+    // renvoie à nul/fort. On garde la même clé technique côté store mais on
+    // habille différemment côté UI : on demande comment l'utilisateur SE VOIT,
+    // pas une auto-évaluation absolue.
     const levelOptions: Array<{ key: Level; emoji: string; labelFr: string; labelEn: string }> = [
-      { key: 'debutant', emoji: '🌱', labelFr: 'Débutant', labelEn: 'Beginner' },
-      { key: 'intermediaire', emoji: '⚡', labelFr: 'Intermédiaire', labelEn: 'Intermediate' },
-      { key: 'confirme', emoji: '🔥', labelFr: 'Confirmé', labelEn: 'Advanced' },
+      { key: 'debutant', emoji: '🌱', labelFr: 'Je découvre', labelEn: 'I\'m discovering' },
+      { key: 'intermediaire', emoji: '⚡', labelFr: 'Je m\'éclate', labelEn: 'I\'m getting into it' },
+      { key: 'confirme', emoji: '🔥', labelFr: 'Je suis à l\'aise', labelEn: 'I\'m comfortable' },
     ];
 
     const handleSportLevel = (sport: string, level: Level) => {
@@ -455,9 +459,9 @@ export default function OnboardingScreen() {
       <div className="min-h-screen bg-[var(--bg)] flex flex-col max-w-[430px] mx-auto">
         <ProgressBar />
         <div className="px-4 pt-6 pb-3 text-center">
-          <h2 className="text-2xl font-bold">{language === 'fr' ? 'Ton niveau par sport' : 'Your level per sport'}</h2>
+          <h2 className="text-2xl font-bold">{language === 'fr' ? 'Comment tu te vois ?' : 'How do you see yourself?'}</h2>
           <p className="text-gray-400 mt-1 text-sm">
-            {language === 'fr' ? '3 taps par sport — c\'est rapide !' : '3 taps per sport — super quick!'}
+            {language === 'fr' ? 'Pour chaque sport — pas d\'évaluation, juste ton ressenti.' : 'For each sport — no test, just your feeling.'}
           </p>
         </div>
 

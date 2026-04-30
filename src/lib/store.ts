@@ -6,7 +6,7 @@ import { SPORTS } from '@/lib/sports-config';
 import { Language } from '@/lib/i18n';
 
 export type Page = 'home' | 'map' | 'explore' | 'messages' | 'profile';
-export type SubPage = 'coach-ai' | 'coach-hub' | 'marketplace' | 'teams' | 'privacy' | 'cgu' | 'edit-sports' | 'my-plans' | 'my-bookings' | 'quick-match-list' | 'trip-planner' | 'premium' |
+export type SubPage = 'coach-ai' | 'coach-hub' | 'marketplace' | 'teams' | 'privacy' | 'cgu' | 'about' | 'edit-sports' | 'my-plans' | 'my-bookings' | 'quick-match-list' | 'trip-planner' | 'premium' |
   { type: 'marketplace' } |
   { type: 'rankings' } |
   { type: 'teams' } |

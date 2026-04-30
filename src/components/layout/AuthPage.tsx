@@ -373,6 +373,7 @@ export default function AuthPage() {
             type="button"
             className="hover:text-gray-300 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] rounded px-1"
             aria-label={t('auth.about', language)}
+            onClick={() => setSubPage('about')}
           >
             {t('auth.about', language)}
           </button>

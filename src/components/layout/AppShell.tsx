@@ -21,6 +21,7 @@ import TrailDetailPage from '@/components/pages/TrailDetailPage';
 import UserProfilePage from '@/components/pages/UserProfilePage';
 import TeamsPage from '@/components/pages/TeamsPage';
 import PrivacyPage from '@/components/pages/PrivacyPage';
+import AboutPage from '@/components/pages/AboutPage';
 import CGUPage from '@/components/pages/CGUPage';
 import MyBookingsPage from '@/components/pages/MyBookingsPage';
 import MyPlansPage from '@/components/pages/MyPlansPage';
@@ -259,6 +260,7 @@ export default function AppShell() {
     // Public pages accessible without login (legal)
     if (!isLoggedIn && subPage === 'privacy') return <PrivacyPage />;
     if (!isLoggedIn && subPage === 'cgu') return <CGUPage />;
+    if (!isLoggedIn && subPage === 'about') return <AboutPage />;
     if (!isLoggedIn) return <AuthPage />;
     if (!hasCompletedOnboarding) return <OnboardingScreen />;
 
@@ -271,6 +273,7 @@ export default function AppShell() {
           case 'teams': return <TeamsPage />;
           case 'privacy': return <PrivacyPage />;
           case 'cgu': return <CGUPage />;
+          case 'about': return <AboutPage />;
           case 'edit-sports': return <OnboardingScreen />;
           case 'my-plans': return <MyPlansPage />;
           case 'my-bookings': return <MyBookingsPage />;
