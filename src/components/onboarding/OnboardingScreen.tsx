@@ -441,14 +441,13 @@ export default function OnboardingScreen() {
 
   // ==== STEP 2: LEVEL (P11: per-sport) ====
   if (step === 'level') {
-    // Reformulation panel V6 (utilisateur réel) : "niveau" est anxiogène et
-    // renvoie à nul/fort. On garde la même clé technique côté store mais on
-    // habille différemment côté UI : on demande comment l'utilisateur SE VOIT,
-    // pas une auto-évaluation absolue.
+    // Retour utilisateur Guillaume : titre plus naturel ("C'est quoi ton level ?"),
+    // sous-titre rassurant ("pas d'évaluation, juste ton ressenti"), labels classiques
+    // (Débutant / Intermédiaire / Confirmé) — la data côté store reste inchangée.
     const levelOptions: Array<{ key: Level; emoji: string; labelFr: string; labelEn: string }> = [
-      { key: 'debutant', emoji: '🌱', labelFr: 'Je découvre', labelEn: 'I\'m discovering' },
-      { key: 'intermediaire', emoji: '⚡', labelFr: 'Je m\'éclate', labelEn: 'I\'m getting into it' },
-      { key: 'confirme', emoji: '🔥', labelFr: 'Je suis à l\'aise', labelEn: 'I\'m comfortable' },
+      { key: 'debutant', emoji: '🌱', labelFr: 'Débutant', labelEn: 'Beginner' },
+      { key: 'intermediaire', emoji: '⚡', labelFr: 'Intermédiaire', labelEn: 'Intermediate' },
+      { key: 'confirme', emoji: '🔥', labelFr: 'Confirmé', labelEn: 'Advanced' },
     ];
 
     const handleSportLevel = (sport: string, level: Level) => {
@@ -459,7 +458,7 @@ export default function OnboardingScreen() {
       <div className="min-h-screen bg-[var(--bg)] flex flex-col max-w-[430px] mx-auto">
         <ProgressBar />
         <div className="px-4 pt-6 pb-3 text-center">
-          <h2 className="text-2xl font-bold">{language === 'fr' ? 'Comment tu te vois ?' : 'How do you see yourself?'}</h2>
+          <h2 className="text-2xl font-bold">{language === 'fr' ? 'C\'est quoi ton level ?' : 'What\'s your level?'}</h2>
           <p className="text-gray-400 mt-1 text-sm">
             {language === 'fr' ? 'Pour chaque sport — pas d\'évaluation, juste ton ressenti.' : 'For each sport — no test, just your feeling.'}
           </p>
