@@ -67,6 +67,27 @@ function AuthBridge() {
       // Optimistic: log in immediately so the UI shows logged-in state
       login(method as 'google' | 'email', name, email);
 
+      // Trigger the onboarding email series on first login (idempotent server-side).
+      // The endpoint checks user_metadata.onboarding_email_sent_at and no-ops if already sent.
+      // Fire-and-forget : no need to block the UI on email delivery.
+      const accessToken = session.access_token;
+      const userMeta = user.user_metadata as Record<string, unknown> | undefined;
+      const alreadySent = !!(userMeta && userMeta.onboarding_email_sent_at);
+      if (accessToken && !alreadySent) {
+        const lang = useStore.getState().language || 'fr';
+        fetch('/api/onboarding/welcome', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ language: lang }),
+        }).catch((err) => {
+          // Silent failure : un échec d'envoi d'emails ne doit jamais bloquer l'app.
+          console.warn('[AuthBridge] onboarding email trigger failed:', err?.message);
+        });
+      }
+
       // Then reconcile onboarding state from Supabase
       const wasOnboardedFlag = !!(user.user_metadata && user.user_metadata.onboarded === true);
       getUserSports(user.id)
