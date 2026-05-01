@@ -13,9 +13,9 @@
     "cap:sync": "npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
-    "mobile:build": "cross-env CAPACITOR_BUILD=true NEXT_PUBLIC_CAPACITOR_BUILD=true next build && npx cap sync",
-    "mobile:ios": "cross-env CAPACITOR_BUILD=true NEXT_PUBLIC_CAPACITOR_BUILD=true next build && npx cap sync && npx cap open ios",
-    "mobile:android": "cross-env CAPACITOR_BUILD=true NEXT_PUBLIC_CAPACITOR_BUILD=true next build && npx cap sync && npx cap open android"
+    "mobile:build": "node scripts/mobile-build.js",
+    "mobile:ios": "node scripts/mobile-build.js && npx cap open ios",
+    "mobile:android": "node scripts/mobile-build.js && npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
