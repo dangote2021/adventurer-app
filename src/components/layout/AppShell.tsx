@@ -4,6 +4,7 @@ import { useStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-provider';
 import { getUserSports } from '@/lib/supabase/queries';
+import { useCapacitorBackButton } from '@/lib/hooks/useCapacitorBackButton';
 
 import AuthPage from '@/components/layout/AuthPage';
 import OnboardingScreen from '@/components/onboarding/OnboardingScreen';
@@ -160,6 +161,9 @@ export default function AppShell() {
     resetMonthlyFreezes,
     checkAndAwardBadges,
   } = useStore();
+
+  // Bouton retour Android : navigue dans l'app au lieu de la quitter.
+  useCapacitorBackButton();
 
   useEffect(() => {
     document.documentElement.lang = language === 'en' ? 'en' : 'fr';
