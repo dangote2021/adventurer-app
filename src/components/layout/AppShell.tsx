@@ -74,14 +74,22 @@ function AuthBridge() {
       const userMeta = user.user_metadata as Record<string, unknown> | undefined;
       const alreadySent = !!(userMeta && userMeta.onboarding_email_sent_at);
       if (accessToken && !alreadySent) {
-        const lang = useStore.getState().language || 'fr';
+        const state = useStore.getState();
+        const lang = state.language || 'fr';
+        // S7+S8 panel V6 (Sara) — passe le contexte d'onboarding pour adapter
+        // le wording du Welcome (onboarding fait/pas fait) et de l'Explore
+        // (mode découverte si pas de sports cochés).
         fetch('/api/onboarding/welcome', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ language: lang }),
+          body: JSON.stringify({
+            language: lang,
+            selectedSports: state.selectedSports || [],
+            hasCompletedOnboarding: state.hasCompletedOnboarding === true,
+          }),
         }).catch((err) => {
           // Silent failure : un échec d'envoi d'emails ne doit jamais bloquer l'app.
           console.warn('[AuthBridge] onboarding email trigger failed:', err?.message);

@@ -107,22 +107,51 @@ function emailShell(opts: {
    J+0 — WELCOME
    ============================================================================= */
 
-function welcomeBody(name: string, lang: Lang) {
+function welcomeBody(name: string, lang: Lang, onboardingDone: boolean) {
   const fr = lang === 'fr';
-  if (fr) {
-    return `
-      <h1 style="color:#1B4332;font-size:24px;margin:0 0 16px">Bienvenue${name ? ' ' + name : ''} 🌲</h1>
-      <p style="font-size:16px;line-height:1.6;color:#374151">
-        Tu viens de rejoindre Adventurer — l'app outdoor qui t'aide à préparer, vivre et partager tes sorties. Que tu sortes une fois par an ou tous les week-ends.
-      </p>
-      <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:24px 0">
-        <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">Ce que tu peux faire :</p>
+  // S8 panel V6 (Sara) — si l'user a déjà complété l'onboarding, ne plus dire
+  // "ouvre l'app et choisis tes sports" — il vient de le faire.
+  const featuresFr = onboardingDone
+    ? `
+        <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
+          <li><strong>Explorer les spots</strong> autour de chez toi avec les prévisions météo</li>
+          <li><strong>Construire ton plan</strong> d'entraînement avec le Coach IA</li>
+          <li><strong>Trouver des partenaires</strong> via Quick Match pour ta prochaine sortie</li>
+          <li><strong>Logger tes sorties</strong> dans ton carnet d'aventure</li>
+        </ul>`
+    : `
         <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
           <li><strong>Choisir tes sports</strong> (Terre / Mer / Air) pour personnaliser ton expérience</li>
           <li><strong>Explorer les spots</strong> autour de chez toi avec les prévisions météo</li>
           <li><strong>Trouver des partenaires</strong> via Quick Match pour ta prochaine sortie</li>
           <li><strong>Construire ton plan</strong> d'entraînement avec le Coach IA</li>
-        </ul>
+        </ul>`;
+  const featuresEn = onboardingDone
+    ? `
+      <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
+        <li><strong>Explore spots</strong> near you with weather forecasts</li>
+        <li><strong>Build your training plan</strong> with the AI Coach</li>
+        <li><strong>Find partners</strong> via Quick Match for your next outing</li>
+        <li><strong>Log your outings</strong> in your adventure journal</li>
+      </ul>`
+    : `
+      <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
+        <li><strong>Pick your sports</strong> (Land / Water / Air) to personalize your feed</li>
+        <li><strong>Explore spots</strong> near you with weather forecasts</li>
+        <li><strong>Find partners</strong> via Quick Match for your next outing</li>
+        <li><strong>Build your training plan</strong> with the AI Coach</li>
+      </ul>`;
+  if (fr) {
+    return `
+      <h1 style="color:#1B4332;font-size:24px;margin:0 0 16px">Bienvenue${name ? ' ' + name : ''} 🌲</h1>
+      <p style="font-size:16px;line-height:1.6;color:#374151">
+        ${onboardingDone
+          ? 'Bienvenue dans Adventurer — l\'app outdoor qui t\'aide à préparer, vivre et partager tes sorties. Tu as configuré tes sports, on est prêts.'
+          : 'Tu viens de rejoindre Adventurer — l\'app outdoor qui t\'aide à préparer, vivre et partager tes sorties. Que tu sortes une fois par an ou tous les week-ends.'}
+      </p>
+      <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:24px 0">
+        <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">${onboardingDone ? 'Ta prochaine étape :' : 'Ce que tu peux faire :'}</p>
+        ${featuresFr}
       </div>
       <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
         <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
@@ -137,16 +166,13 @@ function welcomeBody(name: string, lang: Lang) {
   return `
     <h1 style="color:#1B4332;font-size:24px;margin:0 0 16px">Welcome${name ? ' ' + name : ''} 🌲</h1>
     <p style="font-size:16px;line-height:1.6;color:#374151">
-      You just joined Adventurer — the outdoor app that helps you prepare, experience and share your outings. Whether you go out once a year or every weekend.
+      ${onboardingDone
+        ? 'Welcome to Adventurer — the outdoor app that helps you prepare, experience and share your outings. You\'ve picked your sports, we\'re ready.'
+        : 'You just joined Adventurer — the outdoor app that helps you prepare, experience and share your outings. Whether you go out once a year or every weekend.'}
     </p>
     <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:24px 0">
-      <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">What you can do:</p>
-      <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
-        <li><strong>Pick your sports</strong> (Land / Water / Air) to personalize your feed</li>
-        <li><strong>Explore spots</strong> near you with weather forecasts</li>
-        <li><strong>Find partners</strong> via Quick Match for your next outing</li>
-        <li><strong>Build your training plan</strong> with the AI Coach</li>
-      </ul>
+      <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">${onboardingDone ? 'Your next step:' : 'What you can do:'}</p>
+      ${featuresEn}
     </div>
     <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
       <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
@@ -163,9 +189,32 @@ function welcomeBody(name: string, lang: Lang) {
    J+1 — EXPLORE (trouver des spots)
    ============================================================================= */
 
-function exploreBody(lang: Lang) {
+function exploreBody(lang: Lang, isDiscoveryMode: boolean = false) {
   const fr = lang === 'fr';
+  // S7 panel V6 (Sara) — variante "mode découverte" pour les users qui ont
+  // skip la sélection de sports. On ne leur parle pas de "filtres pré-cochés
+  // sur tes activités" puisqu'ils n'ont rien coché.
   if (fr) {
+    if (isDiscoveryMode) {
+      return `
+      <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 1/4 — Découvre les sports autour de chez toi 🗺️</h1>
+      <p style="font-size:16px;line-height:1.6;color:#374151">
+        Tu n'as pas encore choisi tes sports — pas de souci, l'app marche en mode découverte. Tu vas voir tout ce qui se pratique autour de toi, et tu pourras affiner plus tard depuis ton profil.
+      </p>
+      <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:20px 0">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1B4332">Comment explorer :</p>
+        <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#374151">
+          <li>Onglet <strong>Explorer</strong> en bas → carte ou liste de tous les spots autour de toi</li>
+          <li>Active la géoloc pour les spots les plus proches — sinon Paris par défaut</li>
+          <li>Tape un spot pour voir : météo, conditions, photos communauté</li>
+          <li>Quand tu sais ce qui te tente, va sur <strong>Profil → Modifier mes sports</strong> pour personnaliser le feed</li>
+        </ol>
+      </div>
+      <p style="font-size:14px;color:#6b7280;line-height:1.6">
+        💡 <strong>Astuce débutant :</strong> commence par un sport accessible près de chez toi (rando, vélo, course). Tu pourras toujours essayer kite ou parapente plus tard — ces sports demandent une école d'abord.
+      </p>
+    `;
+    }
     return `
       <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 1/4 — Trouve les meilleurs spots autour de toi 🗺️</h1>
       <p style="font-size:16px;line-height:1.6;color:#374151">
@@ -184,6 +233,26 @@ function exploreBody(lang: Lang) {
         💡 <strong>Tip terrain :</strong> active la géolocalisation pour avoir les prévisions du spot exact. La météo affichée dans l'app reste une prévision (Météo France / Open-Meteo) — pour les sorties engagées (montagne, vol libre, mer), recoupe toujours avec ta source de référence : Meteoblue, Windguru, BERA, NOAA.
       </p>
     `;
+  }
+  if (isDiscoveryMode) {
+    return `
+    <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 1/4 — Discover the sports around you 🗺️</h1>
+    <p style="font-size:16px;line-height:1.6;color:#374151">
+      You haven't picked your sports yet — that's fine, the app runs in discovery mode. You'll see everything that's practiced around you, and you can refine later from your profile.
+    </p>
+    <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:20px 0">
+      <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1B4332">How to explore:</p>
+      <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#374151">
+        <li><strong>Explore</strong> tab at the bottom → map or list view of all nearby spots</li>
+        <li>Enable location for the closest spots — otherwise Paris by default</li>
+        <li>Tap a spot to see: weather, conditions, community photos</li>
+        <li>When you know what tempts you, go to <strong>Profile → Edit my sports</strong> to personalize your feed</li>
+      </ol>
+    </div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.6">
+      💡 <strong>Beginner tip:</strong> start with an accessible sport near you (hiking, cycling, running). You can always try kite or paragliding later — those require a school first.
+    </p>
+  `;
   }
   return `
     <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 1/4 — Find the best spots near you 🗺️</h1>
@@ -265,7 +334,7 @@ function quickMatchBody(lang: Lang) {
   const fr = lang === 'fr';
   if (fr) {
     return `
-      <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 3/4 — Trouve un binôme pour ta prochaine sortie 🤝</h1>
+      <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 4/4 — Trouve un binôme pour ta prochaine sortie 🤝</h1>
       <p style="font-size:16px;line-height:1.6;color:#374151">
         L'outdoor en solo c'est bien, mais à deux ou trois c'est souvent plus safe et plus fun. Quick Match te connecte avec d'autres pratiquants <em>autour d'une sortie concrète</em>, pas via un swipe.
       </p>
@@ -287,7 +356,7 @@ function quickMatchBody(lang: Lang) {
     `;
   }
   return `
-    <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 3/4 — Find a partner for your next outing 🤝</h1>
+    <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 4/4 — Find a partner for your next outing 🤝</h1>
     <p style="font-size:16px;line-height:1.6;color:#374151">
       Solo outdoor is fine, but with two or three it's often safer and more fun. Quick Match connects you with other practitioners <em>around a concrete outing</em>, not through a swipe.
     </p>
@@ -317,7 +386,7 @@ function trackingBody(lang: Lang) {
   const fr = lang === 'fr';
   if (fr) {
     return `
-      <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 4/4 — Logge ta première sortie 📒</h1>
+      <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 3/4 — Logge ta première sortie 📒</h1>
       <p style="font-size:16px;line-height:1.6;color:#374151">
         Adventurer garde une trace de ce que tu vis dehors — pas pour les chiffres, mais pour le carnet d'aventure que tu pourras revisiter dans 10 ans.
       </p>
@@ -339,7 +408,7 @@ function trackingBody(lang: Lang) {
     `;
   }
   return `
-    <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 4/4 — Log your first outing 📒</h1>
+    <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tutorial 3/4 — Log your first outing 📒</h1>
     <p style="font-size:16px;line-height:1.6;color:#374151">
       Adventurer keeps a record of what you experience outdoors — not for the numbers, but for the adventure journal you'll revisit in 10 years.
     </p>
@@ -373,12 +442,22 @@ function trackingBody(lang: Lang) {
  *  - Send all 5 immediately (not recommended)
  *  - Use a Vercel cron + Supabase table to queue them yourself
  */
+export interface OnboardingContext {
+  /** Sports cochés à l'inscription. [] si user a skip l'étape sports. */
+  selectedSports?: string[];
+  /** True si l'utilisateur a complété l'onboarding (sports + niveau). */
+  hasCompletedOnboarding?: boolean;
+}
+
 export async function sendOnboardingSeries(
   to: string,
   name: string | null,
-  lang: Lang = 'fr'
+  lang: Lang = 'fr',
+  context: OnboardingContext = {}
 ) {
   const safeName = (name || '').split(' ')[0].slice(0, 30);
+  const isDiscoveryMode = !context.selectedSports || context.selectedSports.length === 0;
+  const onboardingDone = context.hasCompletedOnboarding === true;
   const now = new Date();
   const dayOffset = (days: number) => {
     const d = new Date(now);
@@ -388,20 +467,23 @@ export async function sendOnboardingSeries(
     return d.toISOString();
   };
 
+  // S6 panel V6 (Sara) — réordonné : Tracking (3/4) avant Quick Match (4/4),
+  // et Quick Match repoussé à J+10 (au lieu de J+5) pour que l'user ait eu
+  // le temps de logger sa première sortie avant de chercher des partenaires.
   const subjects = lang === 'fr'
     ? {
         welcome: `Bienvenue sur Adventurer 🏔️`,
         explore: `Tuto 1/4 — Tes premiers spots`,
         coach: `Tuto 2/4 — Le Coach IA, comment t'en servir`,
-        match: `Tuto 3/4 — Trouve un binôme outdoor`,
-        tracking: `Tuto 4/4 — Logge ta 1ère sortie`,
+        tracking: `Tuto 3/4 — Logge ta 1ère sortie`,
+        match: `Tuto 4/4 — Trouve un binôme outdoor`,
       }
     : {
         welcome: `Welcome to Adventurer 🏔️`,
         explore: `Tutorial 1/4 — Your first spots`,
         coach: `Tutorial 2/4 — How to use the AI Coach`,
-        match: `Tutorial 3/4 — Find an outdoor partner`,
-        tracking: `Tutorial 4/4 — Log your first outing`,
+        tracking: `Tutorial 3/4 — Log your first outing`,
+        match: `Tutorial 4/4 — Find an outdoor partner`,
       };
 
   const preheaders = lang === 'fr'
@@ -429,20 +511,20 @@ export async function sendOnboardingSeries(
     html: emailShell({
       lang,
       preheader: preheaders.welcome,
-      body: welcomeBody(safeName, lang),
+      body: welcomeBody(safeName, lang, onboardingDone),
       ctaUrl: APP_ORIGIN,
       ctaLabel,
     }),
   });
 
-  // J+1 — Explore
+  // J+1 — Explore (variante "découverte" si pas de sports cochés — Sara V6)
   await sendOrSchedule({
     to,
     subject: subjects.explore,
     html: emailShell({
       lang,
       preheader: preheaders.explore,
-      body: exploreBody(lang),
+      body: exploreBody(lang, isDiscoveryMode),
       ctaUrl: `${APP_ORIGIN}/?openTab=explore`,
       ctaLabel,
     }),
@@ -463,21 +545,8 @@ export async function sendOnboardingSeries(
     scheduled_at: dayOffset(3),
   });
 
-  // J+5 — Quick Match
-  await sendOrSchedule({
-    to,
-    subject: subjects.match,
-    html: emailShell({
-      lang,
-      preheader: preheaders.match,
-      body: quickMatchBody(lang),
-      ctaUrl: `${APP_ORIGIN}/?openSubPage=quick-match-list`,
-      ctaLabel,
-    }),
-    scheduled_at: dayOffset(5),
-  });
-
-  // J+7 — Tracking
+  // J+5 — Tracking (avant Quick Match — Sara V6 : on veut que l'user logge
+  // sa 1ère sortie avant de chercher un partenaire)
   await sendOrSchedule({
     to,
     subject: subjects.tracking,
@@ -488,7 +557,22 @@ export async function sendOnboardingSeries(
       ctaUrl: `${APP_ORIGIN}/?openTab=profile`,
       ctaLabel,
     }),
-    scheduled_at: dayOffset(7),
+    scheduled_at: dayOffset(5),
+  });
+
+  // J+10 — Quick Match (repoussé de J+5 à J+10 — Sara V6 : trop tôt à J+5
+  // pour quelqu'un qui n'a même pas fait sa 1ère sortie avec l'app)
+  await sendOrSchedule({
+    to,
+    subject: subjects.match,
+    html: emailShell({
+      lang,
+      preheader: preheaders.match,
+      body: quickMatchBody(lang),
+      ctaUrl: `${APP_ORIGIN}/?openSubPage=quick-match-list`,
+      ctaLabel,
+    }),
+    scheduled_at: dayOffset(10),
   });
 
   return { sent: true, scheduled: 4 };
@@ -510,7 +594,9 @@ export async function sendWelcomeOnly(to: string, name: string | null, lang: Lan
     html: emailShell({
       lang,
       preheader,
-      body: welcomeBody(safeName, lang),
+      // sendWelcomeOnly est utilisé pour le renvoi manuel post-onboarding
+      // → on assume que l'onboarding est fait (tonalité différente).
+      body: welcomeBody(safeName, lang, true),
       ctaUrl: APP_ORIGIN,
       ctaLabel: lang === 'fr' ? 'Ouvrir Adventurer' : 'Open Adventurer',
     }),

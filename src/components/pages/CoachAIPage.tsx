@@ -71,24 +71,48 @@ function parsePrompt(prompt: string): PromptMeta {
   }
 
   // Échéance : mois ("en septembre", "en mai")
-  // monthIndex est aligné en parallèle avec monthKeywords (FR puis EN)
-  const monthKeywords = ['janvier', 'février', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'aout', 'septembre', 'octobre', 'novembre', 'décembre', 'decembre', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-  const monthIndex =     [0,         1,           1,         2,        3,        4,     5,      6,         7,       7,      8,            9,          10,          11,          11,         0,         1,          2,       3,       4,     5,      6,      7,        8,           9,         10,         11];
-  for (let i = 0; i < monthKeywords.length; i++) {
-    if (lower.includes(monthKeywords[i])) {
-      meta.when = monthKeywords[i];
+  // S20 panel V6 (Marc) : refacto des arrays parallèles monthKeywords + monthIndex
+  // en single source of truth (objet) — plus lisible et impossible de désaligner.
+  const MONTHS: Array<{ key: string; idx: number }> = [
+    { key: 'janvier', idx: 0 },
+    { key: 'février', idx: 1 }, { key: 'fevrier', idx: 1 },
+    { key: 'mars', idx: 2 },
+    { key: 'avril', idx: 3 },
+    { key: 'mai', idx: 4 },
+    { key: 'juin', idx: 5 },
+    { key: 'juillet', idx: 6 },
+    { key: 'août', idx: 7 }, { key: 'aout', idx: 7 },
+    { key: 'septembre', idx: 8 },
+    { key: 'octobre', idx: 9 },
+    { key: 'novembre', idx: 10 },
+    { key: 'décembre', idx: 11 }, { key: 'decembre', idx: 11 },
+    { key: 'january', idx: 0 },
+    { key: 'february', idx: 1 },
+    { key: 'march', idx: 2 },
+    { key: 'april', idx: 3 },
+    { key: 'may', idx: 4 },
+    { key: 'june', idx: 5 },
+    { key: 'july', idx: 6 },
+    { key: 'august', idx: 7 },
+    { key: 'september', idx: 8 },
+    { key: 'october', idx: 9 },
+    { key: 'november', idx: 10 },
+    { key: 'december', idx: 11 },
+  ];
+  for (const m of MONTHS) {
+    if (lower.includes(m.key)) {
+      meta.when = m.key;
       // Marc (panel V4/V5) : si l'utilisateur a précisé un mois mais pas de durée explicite,
       // on calcule le nombre de semaines depuis aujourd'hui jusqu'au 1er du mois cible.
       // Si le mois est passé cette année, on vise l'année prochaine.
       if (!meta.weeks) {
         const today = new Date();
-        const targetMonth = monthIndex[i];
         let targetYear = today.getFullYear();
-        const target = new Date(targetYear, targetMonth, 1);
+        const target = new Date(targetYear, m.idx, 1);
         if (target.getTime() < today.getTime()) {
           targetYear += 1;
         }
-        const targetDate = new Date(targetYear, targetMonth, 1);
+        const targetDate = new Date(targetYear, m.idx, 1);
         const diffMs = targetDate.getTime() - today.getTime();
         const diffWeeks = Math.max(2, Math.round(diffMs / (7 * 24 * 3600 * 1000)));
         // On clamp dans une fenêtre raisonnable (2 → 52 semaines)

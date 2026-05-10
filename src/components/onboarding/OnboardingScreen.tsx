@@ -25,6 +25,9 @@ export default function OnboardingScreen() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [discoveryReady, setDiscoveryReady] = useState(false);
   const [visionSlide, setVisionSlide] = useState<0 | 1 | 2>(0);
+  // S4 panel V6 (Léa) : modale d'avertissement à cochage de sports engagés
+  // qui exigent un encadrement professionnel (speed riding, wingsuit, base jump).
+  const [engagedSportWarning, setEngagedSportWarning] = useState<string | null>(null);
   const touchStartX = useRef(0);
   const visionTouchStartX = useRef(0);
 
@@ -42,10 +45,24 @@ export default function OnboardingScreen() {
   const countByUniverse = (u: Universe) =>
     selected.filter(s => SPORTS.find(sp => sp.name === s)?.universe === u).length;
 
+  // S4 panel V6 (Léa) : sports nécessitant un encadrement professionnel — affiche
+  // une modale informative au cochage, ne bloque pas le choix mais responsabilise.
+  const ENGAGED_SPORTS_REQUIRING_GUIDANCE = new Set([
+    'Speed riding',
+    'Speed flying',
+    'Wingsuit',
+    'Base jump',
+  ]);
+
   const toggleSport = (name: string) => {
+    const isAdding = !selected.includes(name);
     setSelected(prev =>
       prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]
     );
+    // Premier coche d'un sport engagé → modale d'avertissement (1 fois par sport).
+    if (isAdding && ENGAGED_SPORTS_REQUIRING_GUIDANCE.has(name)) {
+      setEngagedSportWarning(name);
+    }
   };
 
   const handleTouchStart = (e: TouchEvent) => {
@@ -514,6 +531,48 @@ export default function OnboardingScreen() {
   // ==== STEP 1: SPORTS SELECTION ====
   return (
     <div className="min-h-screen flex flex-col max-w-[430px] mx-auto transition-colors duration-500" style={{ backgroundColor: universeBgColors[currentUniverse], background: `linear-gradient(180deg, ${universeBgColors[currentUniverse]} 0%, var(--bg) 30%)` }}>
+      {/* S4 panel V6 (Léa) — modale d'avertissement sports engagés */}
+      {engagedSportWarning && (
+        <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">⚠️</div>
+              <h3 className="text-lg font-bold text-white">
+                {language === 'fr' ? `${engagedSportWarning} : encadrement professionnel` : `${engagedSportWarning}: professional supervision`}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              {language === 'fr'
+                ? 'Ce sport présente une marge d\'erreur très réduite et des accidents graves chaque saison. Adventurer ne remplace ni un instructeur, ni un brevet de pilote, ni un encadrement professionnel.'
+                : 'This sport has a very narrow margin for error and causes serious accidents every season. Adventurer is not a substitute for an instructor, a pilot license, or professional supervision.'}
+            </p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {language === 'fr'
+                ? 'Avant toute pratique : formation en école certifiée, brevet à jour, matériel contrôlé, et encadrement local pour chaque nouveau site.'
+                : 'Before any practice: certified school training, up-to-date license, checked gear, and local supervision for every new site.'}
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelected(prev => prev.filter(s => s !== engagedSportWarning));
+                  setEngagedSportWarning(null);
+                }}
+                className="flex-1 py-3 rounded-xl bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
+              >
+                {language === 'fr' ? 'Décocher' : 'Uncheck'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEngagedSportWarning(null)}
+                className="flex-1 py-3 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold hover:opacity-90 transition"
+              >
+                {language === 'fr' ? 'J\'ai compris' : 'I understand'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Language Toggle */}
       <div className="px-4 pt-4 pb-2 flex gap-2">
         <button

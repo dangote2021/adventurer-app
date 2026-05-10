@@ -112,6 +112,13 @@ export interface AdventureToday {
   dplus: string;
   distance: string;
   condition: string;
+  /**
+   * S5 panel V6 — IMPORTANT : pour les sports AIR (parapente, vol libre) et
+   * sports nautiques engagés (plongée tek, apnée profonde), NE JAMAIS utiliser
+   * de label "Conditions idéales / parfaites / optimales" automatique. Préférer
+   * "À recouper Meteoparapente / Meteoblue" ou "Visibilité annoncée".
+   * Label "idéal" autorisé uniquement pour les sports terre courants (rando, trail).
+   */
   conditionLabel: string;
   ctaLabel: string;
   socialProof: string;

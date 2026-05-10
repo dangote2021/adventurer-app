@@ -100,8 +100,26 @@ export default function HomePage() {
   const heroTemp = userLat ? Math.round(20 - Math.abs(userLat - 35) * 0.3) : 17;
   const heroWeatherIcon = userLat && userLat > 40 ? '⛅' : '☀️';
 
-  // Reverse geocode: show city name instead of raw coordinates
-  const [heroCity, setHeroCity] = useState('Chamonix');
+  // Reverse geocode: show city name instead of raw coordinates.
+  // S19 panel V6 (Yannick) — fallback ne plus hardcoder "Chamonix" (donne
+  // l'impression d'une app de traileurs même pour un user kiter à Tarifa).
+  // Préfère un libellé neutre tant qu'on n'a pas la géoloc, basé sur le
+  // 1er sport coché si possible.
+  const heroCityFallback = (() => {
+    if (!selectedSports || selectedSports.length === 0) return language === 'fr' ? 'Près de toi' : 'Near you';
+    const first = selectedSports[0];
+    // Sports nautiques → "Côte / Ocean"
+    if (['Kitesurf', 'Surf', 'Wing foil', 'Voile', 'Plongée', 'Apnée', 'Windsurf'].includes(first)) {
+      return language === 'fr' ? 'Côte près de toi' : 'Coast near you';
+    }
+    // Sports air → "Site près de toi"
+    if (['Parapente', 'Deltaplane', 'Speed riding', 'Speed flying'].includes(first)) {
+      return language === 'fr' ? 'Site près de toi' : 'Site near you';
+    }
+    // Défaut (terre)
+    return language === 'fr' ? 'Près de toi' : 'Near you';
+  })();
+  const [heroCity, setHeroCity] = useState(heroCityFallback);
   useEffect(() => {
     if (!userLat || !userLng) return;
     const ctl = new AbortController();

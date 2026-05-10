@@ -53,9 +53,17 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Détermine la langue (du body, défaut fr).
-  const body = (await req.json().catch(() => ({}))) as { language?: string };
+  // Détermine la langue + contexte d'onboarding (du body, défauts safe).
+  const body = (await req.json().catch(() => ({}))) as {
+    language?: string;
+    selectedSports?: string[];
+    hasCompletedOnboarding?: boolean;
+  };
   const lang: 'fr' | 'en' = body.language === 'en' ? 'en' : 'fr';
+  const onboardingContext = {
+    selectedSports: Array.isArray(body.selectedSports) ? body.selectedSports : [],
+    hasCompletedOnboarding: body.hasCompletedOnboarding === true,
+  };
 
   // Récupère le nom préféré : user_metadata.name, sinon l'email avant @.
   let name: string | null = null;
@@ -94,7 +102,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await sendOnboardingSeries(user.email, name, lang);
+    await sendOnboardingSeries(user.email, name, lang, onboardingContext);
     return NextResponse.json({ ok: true, scheduled: 4 });
   } catch (e) {
     console.error('[onboarding-welcome] send failed', (e as Error).message);

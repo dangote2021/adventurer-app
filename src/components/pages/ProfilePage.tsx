@@ -1066,6 +1066,43 @@ export default function ProfilePage() {
 
             {/* Danger Zone */}
             <div className="pt-4 space-y-2">
+              {/* S9 panel V6 (Marc) — Bouton renvoyer la série de bienvenue
+                  pour les users qui ne l'ont pas reçue (spam, mauvaise adresse). */}
+              <button
+                type="button"
+                className="w-full py-3 bg-white/5 text-gray-300 rounded-xl font-medium hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                onClick={async () => {
+                  try {
+                    const { supabase } = await import('@/lib/supabase/client');
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const token = session?.access_token;
+                    if (!token) {
+                      showToast(language === 'fr' ? 'Connecte-toi d\'abord' : 'Log in first', 'error', '🔒');
+                      return;
+                    }
+                    const r = await fetch('/api/onboarding/resend-welcome', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ language }),
+                    });
+                    if (r.ok) {
+                      showToast(language === 'fr' ? 'Email de bienvenue renvoyé !' : 'Welcome email resent!', 'success', '📧');
+                    } else if (r.status === 429) {
+                      showToast(language === 'fr' ? 'Trop de demandes — réessaie dans 1h' : 'Too many requests — try again in 1h', 'warning', '⏳');
+                    } else {
+                      showToast(language === 'fr' ? 'Échec de l\'envoi' : 'Send failed', 'error', '❌');
+                    }
+                  } catch {
+                    showToast(language === 'fr' ? 'Échec de l\'envoi' : 'Send failed', 'error', '❌');
+                  }
+                }}
+                aria-label={language === 'fr' ? 'Renvoyer le mail de bienvenue' : 'Resend welcome email'}
+              >
+                📧 {language === 'fr' ? 'Renvoyer le mail de bienvenue' : 'Resend welcome email'}
+              </button>
               <button
                 type="button"
                 className="w-full py-3 bg-red-900/20 text-red-400 rounded-xl font-medium hover:bg-red-900/30 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"

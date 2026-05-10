@@ -201,6 +201,19 @@ export function isNauticalSport(sport: string): boolean {
 }
 
 /**
+ * Sports aériens (univers AIR) — vol libre + sports parachute.
+ * Pour ces sports, l'app n'affiche pas de label qualitatif "conditions idéales/parfait"
+ * tant qu'on n'a pas branché une source aérologique de référence (Meteoparapente,
+ * Meteoblue ICON-D2). Léa panel V6 — décoller en thermique fort en croyant que
+ * "conditions idéales" se base sur Meteoparapente = accident.
+ */
+export function isAerialSport(sport: string): boolean {
+  return ['Parapente', 'Deltaplane', 'Wingsuit', 'Base jump', 'Vol à voile',
+    'Speed riding', 'Speed flying', 'ULM', 'Saut en parachute',
+    'Tyrolienne'].includes(sport);
+}
+
+/**
  * Build a minimal valid GPX file from a single waypoint or route.
  */
 export function buildGPX(params: { name: string; description?: string; points: Array<{ lat: number; lng: number; ele?: number; name?: string }> }): string {

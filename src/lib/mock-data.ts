@@ -463,12 +463,13 @@ export function getAdventuresForSwipe(sports: string[] = []): AdventureToday[] {
       id: 5,
       emoji: '🤿',
       title: 'Plongée — Épave Le Donator',
-      description: 'Visibilité 20m+, courant faible. Épave mythique à 50m.',
+      description: 'Visibilité 20m, courant faible annoncé. Épave à 50m, plongée tek.',
       temp: '🌡 18°C eau',
       dplus: '👁 20m visi',
       distance: '🌊 Calme',
       condition: '',
-      conditionLabel: 'Conditions parfaites',
+      // S5 panel V6 (Aïcha + Léa) — sport engagé sans capteur sur place : pas de label "parfait/idéal"
+      conditionLabel: 'Visibilité annoncée',
       ctaLabel: '→ Réserver',
       socialProof: 'Anna plonge demain matin',
       sport: 'Plongée'
@@ -477,12 +478,14 @@ export function getAdventuresForSwipe(sports: string[] = []): AdventureToday[] {
       id: 6,
       emoji: '🪂',
       title: 'Vol parapente — Planfait',
-      description: 'Thermiques doux, brise de vallée 10km/h. Décollage idéal.',
+      description: 'Brise de vallée annoncée 10 km/h. Aérologie à recouper sur Meteoparapente avant décollage.',
       temp: '☀️ 20°C',
       dplus: '🌬️ 10 km/h',
       distance: '☁️ Peu nuageux',
       condition: '',
-      conditionLabel: 'Conditions idéales',
+      // S5 panel V6 (Léa) — sport AIR : pas de label "idéal/parfait" tant que Meteoparapente
+      // n'est pas branché. Préfère un label neutre qui invite à recouper.
+      conditionLabel: 'À recouper Meteoparapente',
       ctaLabel: '→ Voir le site',
       socialProof: 'Lucas décolle à 14h',
       sport: 'Parapente'
