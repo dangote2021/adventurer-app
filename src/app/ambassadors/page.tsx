@@ -14,7 +14,7 @@ const PERKS = [
 const SPORTS = [
   'Kitesurf','Surf','Wing foil','Windsurf','Voile','Plongée','Apnée','Paddle',
   'Trail','Ultra-trail','Randonnée','Alpinisme','Escalade',
-  'Parapente','Speedriding','Ski de rando','VTT','Gravel',
+  'Parapente','Speed riding','Ski de rando','VTT','Gravel',
 ];
 
 export default function AmbassadorsPage() {

@@ -39,8 +39,8 @@ async function sendOrSchedule(args: ScheduledEmail) {
     console.warn('[onboarding-emails] RESEND_API_KEY not set — skipping email to', args.to);
     return { skipped: true };
   }
-  // Resend SDK v4 accepts `scheduledAt` (camelCase). Older versions used
-  // `scheduled_at` (snake_case). On envoie les deux par sécurité.
+  // Resend SDK v4 attend `scheduledAt` (camelCase). On ne passe QUE camelCase
+  // pour éviter un 422 sur la validation stricte du SDK (Marc panel V6).
   const payload: Record<string, unknown> = {
     from,
     to: args.to,
@@ -50,7 +50,6 @@ async function sendOrSchedule(args: ScheduledEmail) {
   };
   if (args.scheduled_at) {
     payload.scheduledAt = args.scheduled_at;
-    payload.scheduled_at = args.scheduled_at;
   }
   return resend.emails.send(payload as unknown as Parameters<Resend['emails']['send']>[0]);
 }
@@ -114,44 +113,48 @@ function welcomeBody(name: string, lang: Lang) {
     return `
       <h1 style="color:#1B4332;font-size:24px;margin:0 0 16px">Bienvenue${name ? ' ' + name : ''} 🌲</h1>
       <p style="font-size:16px;line-height:1.6;color:#374151">
-        Tu viens de rejoindre Adventurer — l'app outdoor qui t'accompagne <strong>avant, pendant et après</strong> chaque aventure.
+        Tu viens de rejoindre Adventurer — l'app outdoor qui t'aide à préparer, vivre et partager tes sorties. Que tu sortes une fois par an ou tous les week-ends.
       </p>
       <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:24px 0">
-        <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">Ce que tu peux faire dès maintenant :</p>
+        <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">Ce que tu peux faire :</p>
         <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
           <li><strong>Choisir tes sports</strong> (Terre / Mer / Air) pour personnaliser ton expérience</li>
-          <li><strong>Explorer les spots</strong> autour de chez toi avec la météo en temps réel</li>
+          <li><strong>Explorer les spots</strong> autour de chez toi avec les prévisions météo</li>
           <li><strong>Trouver des partenaires</strong> via Quick Match pour ta prochaine sortie</li>
           <li><strong>Construire ton plan</strong> d'entraînement avec le Coach IA</li>
         </ul>
       </div>
+      <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
+          <strong>Important :</strong> Adventurer t'aide à préparer et partager — pas à te sécuriser. L'app n'a pas de SOS intégré, pas de partage de position live, pas de bulletin avalanche officiel. Pour la sécurité critique, garde tes réflexes : 112 (Europe), 196 (CROSS, secours en mer), PGHM. Adventurer ne remplace ni un instructeur, ni un guide, ni un bulletin officiel.
+        </p>
+      </div>
       <p style="font-size:14px;color:#6b7280;line-height:1.6">
-        Pendant les prochains jours, on va t'envoyer 4 mini-tutos pour te montrer chaque feature en 2 minutes. Pas plus.
-      </p>
-      <p style="font-size:14px;color:#6b7280;line-height:1.6;margin-top:12px">
-        En attendant, ouvre l'app et choisis tes sports — ça prend 30 secondes et c'est ce qui rend tout le reste utile.
+        Pendant les prochains jours, on t'envoie 4 mini-tutos pour te montrer chaque fonctionnalité en 2 minutes. Pas plus.
       </p>
     `;
   }
   return `
     <h1 style="color:#1B4332;font-size:24px;margin:0 0 16px">Welcome${name ? ' ' + name : ''} 🌲</h1>
     <p style="font-size:16px;line-height:1.6;color:#374151">
-      You just joined Adventurer — the outdoor app that supports you <strong>before, during and after</strong> every adventure.
+      You just joined Adventurer — the outdoor app that helps you prepare, experience and share your outings. Whether you go out once a year or every weekend.
     </p>
     <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:24px 0">
-      <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">What you can do right now:</p>
+      <p style="margin:0 0 12px;font-size:14px;color:#1B4332;font-weight:700">What you can do:</p>
       <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#374151">
         <li><strong>Pick your sports</strong> (Land / Water / Air) to personalize your feed</li>
-        <li><strong>Explore spots</strong> near you with real-time weather</li>
+        <li><strong>Explore spots</strong> near you with weather forecasts</li>
         <li><strong>Find partners</strong> via Quick Match for your next outing</li>
         <li><strong>Build your training plan</strong> with the AI Coach</li>
       </ul>
     </div>
+    <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
+        <strong>Important:</strong> Adventurer helps you prepare and share — not to secure you. The app has no built-in SOS, no live position sharing, no official avalanche bulletin. For critical safety, keep your reflexes: 112 (EU), 196 (sea rescue), Mountain Rescue. Adventurer is not a substitute for an instructor, a guide, or an official bulletin.
+      </p>
+    </div>
     <p style="font-size:14px;color:#6b7280;line-height:1.6">
       Over the next few days we'll send you 4 short tutorials covering each feature in 2 minutes. No more.
-    </p>
-    <p style="font-size:14px;color:#6b7280;line-height:1.6;margin-top:12px">
-      In the meantime, open the app and pick your sports — takes 30 seconds and it's what makes everything else useful.
     </p>
   `;
 }
@@ -178,7 +181,7 @@ function exploreBody(lang: Lang) {
         </ol>
       </div>
       <p style="font-size:14px;color:#6b7280;line-height:1.6">
-        💡 <strong>Tip terrain :</strong> active la géolocalisation pour avoir les conditions live exactes. La météo dans l'app utilise les sources les plus fiables (Météo France, NOAA, sources locales selon le sport).
+        💡 <strong>Tip terrain :</strong> active la géolocalisation pour avoir les prévisions du spot exact. La météo affichée dans l'app reste une prévision (Météo France / Open-Meteo) — pour les sorties engagées (montagne, vol libre, mer), recoupe toujours avec ta source de référence : Meteoblue, Windguru, BERA, NOAA.
       </p>
     `;
   }
@@ -192,12 +195,12 @@ function exploreBody(lang: Lang) {
       <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#374151">
         <li><strong>Explore</strong> tab at the bottom → map or list view</li>
         <li>Sport filters at the top — defaults to your selected sports only</li>
-        <li>Tap a spot to see: weather, conditions, who's going, community photos</li>
+        <li>Tap a spot to see: weather forecast, conditions, who's going, community photos</li>
         <li>"Quick Match" button on a spot lets you flag that you're going → others can join you</li>
       </ol>
     </div>
     <p style="font-size:14px;color:#6b7280;line-height:1.6">
-      💡 <strong>Field tip:</strong> turn on geolocation for accurate live conditions. The in-app weather uses the most trusted sources (Météo France, NOAA, sport-specific).
+      💡 <strong>Field tip:</strong> turn on geolocation for accurate forecasts at the exact spot. In-app weather is a forecast (Météo France / Open-Meteo) — for engaged outings (mountain, free flight, sea), always cross-check with your reference: Meteoblue, Windguru, avalanche bulletin, NOAA.
     </p>
   `;
 }
@@ -212,7 +215,7 @@ function coachAIBody(lang: Lang) {
     return `
       <h1 style="color:#1B4332;font-size:22px;margin:0 0 16px">Tuto 2/4 — Un coach IA dans ta poche ✨</h1>
       <p style="font-size:16px;line-height:1.6;color:#374151">
-        Tu te prépares pour un objectif (ultra-trail, traversée à kite, premier 4000…) ? Le Coach IA te génère un plan d'entraînement adapté à ton niveau, ton temps disponible et ton échéance.
+        Que ton objectif soit modeste (marcher 10 km sans souffrir, finir ton premier 5 km) ou ambitieux (ultra-trail, traversée à kite), le Coach IA te génère un plan d'entraînement adapté à ton niveau, ton temps dispo et ton échéance.
       </p>
       <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:20px 0">
         <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1B4332">Comment lui parler :</p>
@@ -269,9 +272,14 @@ function quickMatchBody(lang: Lang) {
       <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:20px 0">
         <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1B4332">Deux façons de l'utiliser :</p>
         <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#374151">
-          <li><strong>Publier une annonce</strong> : "Je vais à La Clusaz samedi en ski de rando, niveau intermédiaire" → les autres voient et peuvent rejoindre</li>
+          <li><strong>Publier une annonce</strong> : "Rando de 12 km autour de Fontainebleau dimanche, allure tranquille" — ou — "Vol cross Annecy → Bornes dimanche, ETD 11h" → les autres voient et peuvent rejoindre</li>
           <li><strong>Rejoindre une annonce</strong> : sur n'importe quel spot, tu vois qui prévoit d'y aller cette semaine → tape "Je viens" pour te connecter</li>
         </ol>
+      </div>
+      <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
+          <strong>Avant la sortie :</strong> le niveau affiché est déclaratif. Pour une sortie technique (alpinisme, ski-rando engagé, vol cross, course en mer), confirme par message : niveau réel, créneau météo, matos, plan B, horaire de retour. C'est du compagnonnage, pas du juridique.
+        </p>
       </div>
       <p style="font-size:14px;color:#6b7280;line-height:1.6">
         💡 <strong>Pas de pression</strong> : on n'affiche jamais "X aventuriers près de chez toi" tant qu'il n'y a personne réellement. Si c'est vide chez toi, tu es la première personne à publier — c'est exactement comme ça que la communauté démarre.
@@ -286,9 +294,14 @@ function quickMatchBody(lang: Lang) {
     <div style="background:#F2F9F5;border-radius:12px;padding:20px;margin:20px 0">
       <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1B4332">Two ways to use it:</p>
       <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#374151">
-        <li><strong>Post a heads-up</strong>: "Going to La Clusaz Saturday for ski touring, intermediate level" → others can see and join</li>
+        <li><strong>Post a heads-up</strong>: "12 km hike around Fontainebleau Sunday, easy pace" — or — "XC paragliding flight Annecy → Bornes Sunday, ETD 11am" → others can see and join</li>
         <li><strong>Join a heads-up</strong>: on any spot, see who plans to go there this week → tap "I'm in" to connect</li>
       </ol>
+    </div>
+    <div style="background:#FEF3C7;border-left:3px solid #F77F00;border-radius:8px;padding:14px 16px;margin:20px 0">
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#7c2d12">
+        <strong>Before the outing:</strong> displayed levels are self-declared. For technical outings (alpinism, engaged ski touring, XC paragliding, sea race), confirm by message: real level, weather window, gear, plan B, return time. It's just good practice.
+      </p>
     </div>
     <p style="font-size:14px;color:#6b7280;line-height:1.6">
       💡 <strong>No pressure</strong>: we never show "X adventurers near you" while there's actually no one. If it's empty in your area, you're the first to post — that's exactly how communities start.

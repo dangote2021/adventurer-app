@@ -37,8 +37,8 @@ export default function AboutPage() {
           </h3>
           <p className="text-sm leading-relaxed">
             {fr
-              ? 'Adventurer rassemble en un seul endroit ce qui était jusque-là éclaté entre dix apps : la préparation d\'aventure, la cartographie terrain, la communauté de pratiquants, et le partage de ce qu\'on a vécu. Une app pensée par des passionnés outdoor, pour des passionnés outdoor.'
-              : 'Adventurer brings together in one place what used to be scattered across ten apps: trip planning, field mapping, an outdoor community, and sharing what you\'ve experienced. An app designed by outdoor enthusiasts, for outdoor enthusiasts.'}
+              ? 'Adventurer rassemble en un seul endroit ce qui était jusque-là éclaté entre dix apps : la préparation de sortie, la cartographie terrain, la communauté de pratiquants, et le partage de ce qu\'on a vécu. Pour ceux qui sortent dehors, qu\'on le fasse une fois par an ou tous les week-ends.'
+              : 'Adventurer brings together in one place what used to be scattered across ten apps: trip planning, field mapping, an outdoor community, and sharing what you\'ve experienced. For people who go outside, whether it\'s once a year or every weekend.'}
           </p>
         </section>
 
@@ -47,9 +47,10 @@ export default function AboutPage() {
             {fr ? 'Ce qu\'on couvre' : 'What we cover'}
           </h3>
           <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
-            <li>{fr ? 'Trail, randonnée, alpinisme, ski de rando, escalade' : 'Trail, hiking, alpinism, ski touring, climbing'}</li>
-            <li>{fr ? 'Kitesurf, surf, wing foil, voile, plongée, apnée' : 'Kitesurfing, surfing, wing foil, sailing, diving, freediving'}</li>
+            <li>{fr ? 'Marche, randonnée, course à pied, trail' : 'Walking, hiking, running, trail'}</li>
             <li>{fr ? 'Vélo route, gravel, VTT, bikepacking' : 'Road cycling, gravel, MTB, bikepacking'}</li>
+            <li>{fr ? 'Kitesurf, surf, wing foil, voile, paddle, plongée' : 'Kitesurfing, surfing, wing foil, sailing, paddle, diving'}</li>
+            <li>{fr ? 'Ski de rando, alpinisme, escalade' : 'Ski touring, alpinism, climbing'}</li>
             <li>{fr ? 'Parapente, vol libre' : 'Paragliding, free flight'}</li>
           </ul>
         </section>
@@ -96,6 +97,17 @@ export default function AboutPage() {
 
         <section>
           <h3 className="font-bold text-white mb-2 text-base">
+            {fr ? 'Ce qu\'on ne fait pas (encore)' : 'What we don\'t do (yet)'}
+          </h3>
+          <p className="text-sm leading-relaxed text-gray-400">
+            {fr
+              ? 'Adventurer t\'aide à préparer, vivre et raconter tes sorties. Mais aujourd\'hui, l\'app n\'a pas de SOS intégré, pas de partage de position en temps réel, pas de bulletin avalanche officiel, pas de NOTAM. Pour la sécurité critique, garde tes réflexes : 112 (Europe), 196 (CROSS, secours en mer), PGHM. Adventurer ne remplace ni un instructeur, ni un guide, ni un bulletin officiel.'
+              : 'Adventurer helps you prepare, experience and share your outings. But today, the app has no built-in SOS, no live position sharing, no official avalanche bulletin, no NOTAM. For critical safety, keep your reflexes: 112 (EU), 196 (sea rescue), Mountain Rescue. Adventurer is not a substitute for an instructor, a guide, or an official bulletin.'}
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-bold text-white mb-2 text-base">
             {fr ? 'Contact' : 'Contact'}
           </h3>
           <p className="text-sm">
@@ -111,7 +123,7 @@ export default function AboutPage() {
         </section>
 
         <section className="pt-4 text-center text-xs text-gray-500 border-t border-white/5">
-          <p>Adventurer · v5.0.1</p>
+          <p>Adventurer · v5.0.2</p>
           <p className="mt-1">
             {fr ? 'Fait avec passion entre les Alpes et l\'océan.' : 'Made with passion between the Alps and the ocean.'}
           </p>

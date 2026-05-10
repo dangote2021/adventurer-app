@@ -26,7 +26,7 @@ const SPORTS = [
   'Alpinisme', 'Escalade', 'Ski de rando',
   'Kitesurf', 'Surf', 'Wing foil', 'Apnée', 'Plongée',
   'Vélo route', 'Gravel', 'Bikepacking',
-  'Parapente', 'Speedriding',
+  'Parapente', 'Speed riding',
 ];
 
 export default function CoachAIPage() {

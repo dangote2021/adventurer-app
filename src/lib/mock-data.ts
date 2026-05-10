@@ -73,7 +73,7 @@ export const USER_PROFILES: UserProfile[] = [
     avatar: '🧑‍🏫',
     location: 'Chamonix, France',
     bio: 'Moniteur parapente BEES. 15 ans de vol dans les Alpes.',
-    sports: ['Parapente', 'Speedriding', 'Alpinisme'],
+    sports: ['Parapente', 'Speed riding', 'Alpinisme'],
     stats: { sorties: 520, hours: 2100, dplus: 0, km: 12000 },
     badges: ['Coach certifié', '1000 vols'],
     level: 'Expert',

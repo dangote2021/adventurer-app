@@ -250,9 +250,56 @@ function generateAIResponse(prompt: string, sports: string[], sportLevels: Recor
       phases: [
         { name: '🟢 Fondamentaux (S1-S2)', duration: '2 semaines', description: 'Maîtrise du contrôle de l\'aile et du board', sessions: ['Session technique : transitions', 'Travail du body drag upwind', 'Session waterstart des deux côtés'] },
         { name: '🟡 Sauts (S3-S5)', duration: '3 semaines', description: 'Premiers sauts et contrôle aérien', sessions: ['Pop et timing de saut', 'Backroll progressif', 'Grab en l\'air (indy, melon)'] },
-        { name: '🔴 Freestyle (S6-S8)', duration: '3 semaines', description: 'Figures avancées et style', sessions: ['Front roll', 'Raley / S-bend', 'Handle pass (au trapèze d\'abord)'] },
+        { name: '🔴 Freestyle (S6-S8)', duration: '3 semaines', description: 'Figures avancées et style', sessions: ['Front roll', 'Raley / S-bend', 'Handle pass (avec leash de chicken loop d\'abord)'] },
       ],
       tips: ['Toujours rider avec un buddy', 'Vérifier la météo 2h avant', 'Filmer tes sessions pour analyser', 'Échauffement épaules indispensable'],
+    };
+  }
+
+  // Léa panel V6 : branche parapente dédiée — avant on tombait sur le plan générique
+  // (3 sorties/sem 45min) qui décrédibilise l'IA. Pas un plan complet, mais des phases
+  // qui parlent vraiment au pratiquant. Pour les disciplines engagées (cross, SIV,
+  // acro), on assume "encadrement obligatoire" — l'app ne remplace pas un instructeur.
+  if (lower.includes('parapente') || lower.includes('cross') || lower.includes('thermique')) {
+    const level = pickLevel(['Parapente', 'Speed riding', 'Speed flying']);
+    const weeks = detected.weeks || 8;
+    if (level === 'debutant') {
+      return {
+        detected,
+        title: `Parapente — Consolider tes premiers vols (${weeks} sem)`,
+        overview: `Tu sors d'un stage initiation et tu cherches à voler en autonomie sans perdre tes acquis. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '1-2 sessions/sem météo'} en site école sous supervision club ou moniteur.${echoPrompt()}`,
+        phases: [
+          { name: '🟢 Gonflage et conduite (S1-S3)', duration: '3 semaines', description: 'Reprendre confiance au sol avant tout vol', sessions: ['Gonflage face voile 30min × 3/sem', 'Pilotage au sol sous voile (vent faible)', 'Vol en conditions calmes uniquement', 'Atterrissage : approche en S maîtrisée'] },
+          { name: '🟡 Vol thermique léger (S4-S6)', duration: '3 semaines', description: 'Sortir du vol passager — sentir l\'aérologie', sessions: ['Vols matinaux ou fin de journée', 'Conduite en thermique stable (sous moniteur)', 'Posé en cible (zone de 10m)', 'Briefing et debriefing systématiques'] },
+          { name: '🔴 Autonomie progressive (S7-S8)', duration: '2 semaines', description: 'Premier vol sans encadrement direct', sessions: ['Vol club avec radio', 'Choix de créneau aérologique', 'Plan B atterrissage de secours identifié', 'Carnet de vol tenu rigoureusement'] },
+        ],
+        tips: ['Source météo de référence : Meteoparapente + Meteoblue', 'Toujours vérifier NOTAM et zones P/D/R sur SIA', 'Vol en groupe ou avec radio club, pas en solo isolé', 'Pas d\'engagement avant 30h de vol total'],
+      };
+    }
+    if (level === 'confirme') {
+      return {
+        detected,
+        title: detected.weeks ? `Parapente — Préparation cross / progression (${weeks} sem)` : `Parapente — Progression confirmée (${weeks} sem)`,
+        overview: `Tu as 100h+ et tu vises soit du cross, soit une discipline engagée (SIV, acro, vol bivouac). ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem météo' : '2-3 sessions/sem'}. Programme orienté analyse aérologique et autonomie de décision.${echoPrompt()}`,
+        phases: [
+          { name: '🟢 Lecture aérologique (S1-S2)', duration: '2 semaines', description: 'Affiner ta lecture du ciel et des prévisions', sessions: ['Analyse Meteoparapente quotidienne', 'Vol en conditions complexes (brises de vallée)', 'Centrage thermique fin', 'Tracé de spirale dans la masse'] },
+          { name: '🟡 Distance et transitions (S3-S5)', duration: '3 semaines', description: 'Construire un cross — gestion de la finesse', sessions: ['Vol entre 2 thermiques sur transition longue', 'Gestion de la finesse en vent contraire', 'Choix tactique des reliefs', 'Vol en groupe — bénéficier des marqueurs'] },
+          { name: '🔴 Engagement contrôlé (S6-S' + weeks + ')', duration: `${Math.max(2, weeks - 5)} semaines`, description: 'Vols cross structurés — toujours avec plan B', sessions: ['Cross de 30km+ avec plan d\'atterrissage par secteur', 'Stage SIV recommandé avant tout engagement (incidents de vol)', 'Carnet de vol détaillé : conditions / décisions / leçons', 'Si acro/voltige : encadrement professionnel obligatoire'] },
+        ],
+        tips: ['Stage SIV indispensable avant cross ou voltige (sécurité incidents)', 'Source ref : Meteoparapente + Meteoblue ICON-D2 + Wind3D', 'NOTAM via SIA + zones temporaires (TRA militaires, exercices)', 'Pas de vol cross sans plan d\'atterrissage de secours par secteur'],
+      };
+    }
+    // Niveau intermédiaire (défaut)
+    return {
+      detected,
+      title: `Parapente — Progression intermédiaire (${weeks} sem)`,
+      overview: `Tu voles régulièrement (30-100h) et tu veux franchir le cap : durée, cross léger, ou progression technique. ${detected.hoursPerWeek ? detected.hoursPerWeek + 'h/sem' : '2 sessions/sem météo'}.${echoPrompt()}`,
+      phases: [
+        { name: '🟢 Pilotage actif (S1-S3)', duration: '3 semaines', description: 'Sentir l\'aile, anticiper, corriger', sessions: ['Pilotage actif en air agité (sous moniteur)', '360 et virages serrés stabilisés', 'Pratique du wing-over progressif', 'Approche atterrissage en huit'] },
+          { name: '🟡 Vol de durée (S4-S6)', duration: '3 semaines', description: 'Tenir 1h en thermique faible', sessions: ['Recherche active de l\'ascendance', 'Centrage progressif sans perdre la masse', 'Repérage des marqueurs (rapaces, autres ailes)', 'Vol matinal pour profiter des restitutions'] },
+        { name: '🔴 Premier petit cross (S7-S' + weeks + ')', duration: `${Math.max(2, weeks - 6)} semaines`, description: 'Sortir du site école avec retour assuré', sessions: ['Cross 5-10km avec retour à la voiture facile', 'Identifier 3 atterrissages de secours avant décollage', 'Vol accompagné d\'un confirmé', 'Stage SIV recommandé avant engagement'] },
+      ],
+      tips: ['Stage SIV recommandé avant tout vol engagé', 'Meteoparapente reste LA référence vol libre', 'NOTAM SIA + zones P/D/R obligatoirement consultés', 'Pas de cross sans repérage atterrissages de secours'],
     };
   }
 
@@ -313,7 +360,17 @@ function getSuggestions(sports: string[], sportLevels: Record<string, Level>): A
       : { emoji: '🤿', text: 'Passer de 2min à 3min30 en apnée statique' });
   }
   if (sports.some(s => ['Alpinisme', 'Ski de rando'].includes(s))) suggestions.push({ emoji: '🏔', text: 'Préparer l\'ascension du Mont-Blanc' });
-  if (sports.some(s => ['Parapente'].includes(s))) suggestions.push({ emoji: '🪂', text: 'Premier vol cross de 30km en parapente' });
+  // Léa panel V6 : "Premier vol cross 30km" requiert ~300h de vol — réservé aux confirmés.
+  if (sports.includes('Parapente')) {
+    const lvl = levelOf('Parapente');
+    if (lvl === 'confirme') {
+      suggestions.push({ emoji: '🪂', text: 'Premier vol cross de 30km en parapente' });
+    } else if (lvl === 'debutant') {
+      suggestions.push({ emoji: '🪂', text: 'Consolider mes premiers vols : pilotage et atterrissage propre' });
+    } else {
+      suggestions.push({ emoji: '🪂', text: 'Vol de durée 1h en thermique faible' });
+    }
+  }
   if (suggestions.length === 0) {
     suggestions.push({ emoji: '🏃', text: 'Préparer un trail de 50km' }, { emoji: '💪', text: 'Programme renforcement outdoor 8 semaines' });
   }

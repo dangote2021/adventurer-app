@@ -74,26 +74,32 @@ export async function POST(req: NextRequest) {
     name = user.email.split('@')[0] || null;
   }
 
+  // IMPORTANT (Marc panel V6) : on pose le flag AVANT l'envoi pour éviter
+  // qu'un crash en plein milieu de la série conduise à renvoyer les 5 emails
+  // depuis zéro à la prochaine reconnexion. Mieux vaut un email manqué qu'un
+  // double Welcome dans la boîte d'un user.
+  if (serviceRoleKey) {
+    try {
+      const admin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: { onboarding_email_sent_at: new Date().toISOString() },
+      });
+    } catch (e) {
+      console.error('[onboarding-welcome] admin update (pre-send) failed', (e as Error).message);
+      // Si l'écriture du flag échoue, on n'envoie PAS — on préfère manquer que dupliquer.
+      return NextResponse.json({ error: 'Idempotency flag write failed' }, { status: 500 });
+    }
+  }
+
   try {
     await sendOnboardingSeries(user.email, name, lang);
-
-    // Marque comme envoyé dans user_metadata pour éviter les renvois.
-    if (serviceRoleKey) {
-      try {
-        const admin = createClient(supabaseUrl, serviceRoleKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        await admin.auth.admin.updateUserById(user.id, {
-          user_metadata: { onboarding_email_sent_at: new Date().toISOString() },
-        });
-      } catch (e) {
-        console.error('[onboarding-welcome] admin update failed', (e as Error).message);
-      }
-    }
-
     return NextResponse.json({ ok: true, scheduled: 4 });
   } catch (e) {
     console.error('[onboarding-welcome] send failed', (e as Error).message);
+    // Le flag est déjà posé : pas de retry automatique au prochain login.
+    // L'utilisateur pourra demander un renvoi manuel via un bouton dédié si besoin.
     return NextResponse.json({ error: 'Email send failed' }, { status: 500 });
   }
 }

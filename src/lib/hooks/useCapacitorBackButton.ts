@@ -43,6 +43,18 @@ export function useCapacitorBackButton() {
           // Récupère l'état le plus récent au moment du tap (pas une stale closure)
           const state = useStore.getState();
 
+          // Cas 0a — Modal de célébration au-dessus de tout (z-index 200) — Marc panel V6
+          if (state.showCelebration) {
+            state.dismissCelebration();
+            return;
+          }
+
+          // Cas 0b — Wrapped modal (récap mensuel) au-dessus de tout
+          if (state.showWrapped) {
+            state.dismissWrapped();
+            return;
+          }
+
           if (state.subPage) {
             // Cas 1 : subPage ouverte → on ferme et on reste sur la page principale
             state.closeSubPage();
