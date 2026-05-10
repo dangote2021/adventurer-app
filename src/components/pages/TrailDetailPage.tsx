@@ -1,9 +1,9 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { t, type Language } from '@/lib/i18n';
 import { GPX_ROUTES } from '@/lib/mock-data';
-import { estimateWeather, isNauticalSport, buildGPX, downloadGPX } from '@/lib/weather';
+import { estimateWeather, isNauticalSport, buildGPX, downloadGPX, fetchMarine, readMarine, type MarineForecast } from '@/lib/weather';
 import { QuickMatchModal, RouteReportModal } from '@/components/modals/V2Modals';
 
 interface TrailDetailPageProps {
@@ -232,6 +232,13 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
           )}
         </div>
 
+        {/* S10 panel V6 (Yannick) — Conditions marines pour les sports nautiques.
+            Affiche houle, période, température eau via Open-Meteo Marine API.
+            Ces données existaient (fetchMarine + readMarine dans weather.ts)
+            mais n'étaient pas branchées dans le widget météo.
+            Pas de marées ici (S13 — API payante en attente budget). */}
+        {nautical && <NauticalConditionsBlock lat={avgLat} lng={avgLng} sport={trail.sport} language={language} />}
+
         {/* Profil d'altitude — gating multi-règles (panel V4 / Léa + Aïcha).
             Léa : sur sport nautique (kite/surf/wing/voile/SUP/plongée…) un D+ et
             une courbe d'altitude n'ont aucun sens. Aïcha : sur sport engagé
@@ -418,6 +425,88 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
       {showReport && (
         <RouteReportModal routeId={trail.id} routeTitle={trail.name} onClose={() => setShowReport(false)} />
       )}
+    </div>
+  );
+}
+
+// =============================================================================
+// S10 panel V6 (Yannick) — bloc conditions marines (houle, période, SST)
+// Branché sur Open-Meteo Marine API. Pas de marées ici (S13 en attente budget).
+// =============================================================================
+function NauticalConditionsBlock({ lat, lng, sport, language }: { lat: number; lng: number; sport: string; language: Language }) {
+  const [marine, setMarine] = useState<MarineForecast | null>(null);
+  const [loading, setLoading] = useState(true);
+  const fr = language === "fr";
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchMarine(lat, lng).then(m => {
+      if (!cancelled) {
+        setMarine(m);
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [lat, lng]);
+
+  if (loading) {
+    return (
+      <div className="bg-[var(--card)] rounded-2xl p-4">
+        <h3 className="font-bold text-sm mb-2">🌊 {fr ? "Conditions mer" : "Sea conditions"}</h3>
+        <p className="text-xs text-gray-500">{fr ? "Chargement…" : "Loading…"}</p>
+      </div>
+    );
+  }
+
+  if (!marine || (marine.wave_height_m === null && marine.sea_temp_c === null)) {
+    return (
+      <div className="bg-[var(--card)] rounded-2xl p-4">
+        <h3 className="font-bold text-sm mb-2">🌊 {fr ? "Conditions mer" : "Sea conditions"}</h3>
+        <p className="text-xs text-gray-400">
+          {fr
+            ? "Données marines non disponibles pour ce spot. Recoupe avec Windguru ou Surf-Forecast."
+            : "Marine data unavailable for this spot. Cross-check with Windguru or Surf-Forecast."}
+        </p>
+      </div>
+    );
+  }
+
+  const status = readMarine(sport, marine);
+  const toneColor = status.tone === "good" ? "text-green-400"
+    : status.tone === "warning" ? "text-orange-400" : "text-blue-400";
+
+  return (
+    <div className="bg-[var(--card)] rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-sm">🌊 {fr ? "Conditions mer" : "Sea conditions"}</h3>
+        <span className={`text-xs font-semibold ${toneColor}`}>{status.label}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        <div className="bg-white/5 rounded-lg p-2.5 text-center">
+          <p className="text-lg font-bold text-blue-400">
+            {marine.wave_height_m !== null ? `${marine.wave_height_m.toFixed(1)} m` : "—"}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{fr ? "Hauteur" : "Height"}</p>
+        </div>
+        <div className="bg-white/5 rounded-lg p-2.5 text-center">
+          <p className="text-lg font-bold text-blue-400">
+            {marine.wave_period_s !== null ? `${Math.round(marine.wave_period_s)} s` : "—"}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{fr ? "Période" : "Period"}</p>
+        </div>
+        <div className="bg-white/5 rounded-lg p-2.5 text-center">
+          <p className="text-lg font-bold text-blue-400">
+            {marine.sea_temp_c !== null ? `${Math.round(marine.sea_temp_c)}°C` : "—"}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{fr ? "Eau" : "Water"}</p>
+        </div>
+      </div>
+      <p className="text-[11px] text-gray-500 leading-relaxed mt-2">
+        {status.detail}
+        {fr ? " · Source : Open-Meteo Marine — recoupe avec Windguru / Surf-Forecast pour les sorties engagées."
+            : " · Source: Open-Meteo Marine — cross-check with Windguru / Surf-Forecast for engaged outings."}
+      </p>
     </div>
   );
 }

@@ -263,34 +263,79 @@ export default function HomePage() {
     }
   };
 
-  // Mountain background SVG
-  const MountainBackground = () => (
-    <svg
-      className="absolute inset-0 w-full h-full opacity-40"
-      viewBox="0 0 1000 400"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      {/* Background peaks */}
-      <path d="M0,250 L150,150 L300,200 L450,100 L600,180 L750,120 L900,200 L1000,150 L1000,400 L0,400 Z" fill="#1B4332" opacity="0.3" />
+  // S12 panel V6 (Yannick) — Hero background sport-aware.
+  // Avant : MountainBackground hardcoded → criait "app de traileurs" pour
+  // un kiter à Tarifa. Maintenant : 3 variantes (montagne / océan / ciel)
+  // selon le 1er sport coché.
+  const heroVariant: 'mountain' | 'ocean' | 'sky' = (() => {
+    if (!selectedSports || selectedSports.length === 0) return 'mountain';
+    const first = selectedSports[0];
+    if (['Kitesurf', 'Surf', 'Wing foil', 'Voile', 'Plongée', 'Apnée', 'Windsurf', 'Bodyboard', 'Snorkeling', 'Kayak de mer', 'Paddle (SUP)', 'Catamaran', 'Wakeboard', 'Ski nautique'].includes(first)) {
+      return 'ocean';
+    }
+    if (['Parapente', 'Deltaplane', 'Wingsuit', 'Base jump', 'Vol à voile', 'Speed riding', 'Speed flying', 'ULM', 'Saut en parachute'].includes(first)) {
+      return 'sky';
+    }
+    return 'mountain';
+  })();
 
-      {/* Mid peaks */}
-      <path d="M0,280 L120,200 L250,240 L400,160 L550,220 L700,170 L850,250 L1000,200 L1000,400 L0,400 Z" fill="#2D6A4F" opacity="0.4" />
+  const HeroBackground = () => {
+    if (heroVariant === 'ocean') {
+      return (
+        <svg className="absolute inset-0 w-full h-full opacity-50" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          {/* Sun above horizon */}
+          <circle cx="850" cy="100" r="50" fill="#F77F00" opacity="0.6" />
+          <circle cx="850" cy="100" r="38" fill="#FFB703" opacity="0.4" />
+          {/* Distant horizon line */}
+          <path d="M0,220 L1000,220 L1000,400 L0,400 Z" fill="#03045E" opacity="0.4" />
+          {/* Wave layers */}
+          <path d="M0,260 Q150,240 300,260 T600,260 T900,260 L1000,260 L1000,400 L0,400 Z" fill="#0077B6" opacity="0.5" />
+          <path d="M0,300 Q120,280 240,300 T480,300 T720,300 T960,300 L1000,300 L1000,400 L0,400 Z" fill="#00B4D8" opacity="0.5" />
+          <path d="M0,340 Q100,325 200,340 T400,340 T600,340 T800,340 T1000,340 L1000,400 L0,400 Z" fill="#90E0EF" opacity="0.4" />
+        </svg>
+      );
+    }
+    if (heroVariant === 'sky') {
+      return (
+        <svg className="absolute inset-0 w-full h-full opacity-50" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          {/* Sun */}
+          <circle cx="850" cy="80" r="45" fill="#F77F00" opacity="0.6" />
+          <circle cx="850" cy="80" r="33" fill="#FFB703" opacity="0.4" />
+          {/* Cloud layers */}
+          <ellipse cx="200" cy="120" rx="120" ry="25" fill="#ffffff" opacity="0.3" />
+          <ellipse cx="500" cy="160" rx="180" ry="30" fill="#ffffff" opacity="0.25" />
+          <ellipse cx="700" cy="200" rx="140" ry="22" fill="#ffffff" opacity="0.3" />
+          {/* Distant peak silhouette (low, just for ground reference) */}
+          <path d="M0,330 L200,290 L400,310 L600,280 L800,300 L1000,270 L1000,400 L0,400 Z" fill="#1B4332" opacity="0.3" />
+          {/* Wing/glider hint */}
+          <path d="M450,180 Q470,170 490,180 Q510,170 530,180 Q510,185 490,182 Q470,185 450,180 Z" fill="#F77F00" opacity="0.7" />
+        </svg>
+      );
+    }
+    // Mountain (défaut)
+    return (
+      <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path d="M0,250 L150,150 L300,200 L450,100 L600,180 L750,120 L900,200 L1000,150 L1000,400 L0,400 Z" fill="#1B4332" opacity="0.3" />
+        <path d="M0,280 L120,200 L250,240 L400,160 L550,220 L700,170 L850,250 L1000,200 L1000,400 L0,400 Z" fill="#2D6A4F" opacity="0.4" />
+        <path d="M0,300 L100,220 L200,260 L350,180 L500,250 L650,200 L800,280 L1000,240 L1000,400 L0,400 Z" fill="#40916C" opacity="0.5" />
+        <circle cx="850" cy="80" r="45" fill="#F77F00" opacity="0.6" />
+        <circle cx="850" cy="80" r="35" fill="#FFB703" opacity="0.4" />
+      </svg>
+    );
+  };
 
-      {/* Foreground peaks */}
-      <path d="M0,300 L100,220 L200,260 L350,180 L500,250 L650,200 L800,280 L1000,240 L1000,400 L0,400 Z" fill="#40916C" opacity="0.5" />
-
-      {/* Sun */}
-      <circle cx="850" cy="80" r="45" fill="#F77F00" opacity="0.6" />
-      <circle cx="850" cy="80" r="35" fill="#FFB703" opacity="0.4" />
-    </svg>
-  );
+  // Gradient hero adapté à la variante
+  const heroGradient = heroVariant === 'ocean'
+    ? 'from-[#03045E] to-[#0077B6]'
+    : heroVariant === 'sky'
+      ? 'from-[#1B4332] to-[#74C0FC]'
+      : 'from-[#1B4332] to-[#2D6A4F]';
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-white pb-28 max-w-[430px] mx-auto">
       {/* 1. HERO BANNER */}
-      <section className="relative h-64 bg-gradient-to-b from-[#1B4332] to-[#2D6A4F] overflow-hidden">
-        <MountainBackground />
+      <section className={`relative h-64 bg-gradient-to-b ${heroGradient} overflow-hidden`}>
+        <HeroBackground />
 
         <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6">
           <div className="flex items-center gap-3 mb-2">

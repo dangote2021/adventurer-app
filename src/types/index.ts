@@ -176,6 +176,15 @@ export interface SpotItem {
   windSpeed?: number;
   windDirection?: string;
   windStatus?: string;
+  // S11 panel V6 (Yannick) — modèle nautique enrichi
+  // Plan d'eau (vrai critère #1 entre Los Lances et Valdevaqueros pour le kite)
+  waterType?: 'flat-lagoon' | 'choppy' | 'wave' | 'mixed';
+  // Stabilité du vent (rafaleux vs régulier)
+  windQuality?: 'stable' | 'gusty' | 'thermique';
+  // Orientations qui marchent au spot, ex Tarifa = ['E', 'W'] (Levante, Poniente)
+  bestWind?: Array<'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'>;
+  // True si le spot est marée-dépendant (Atlantique : oui, Méditerranée : non)
+  tideDependence?: boolean;
 }
 
 // ============================================================================
