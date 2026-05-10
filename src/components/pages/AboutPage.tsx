@@ -123,7 +123,7 @@ export default function AboutPage() {
         </section>
 
         <section className="pt-4 text-center text-xs text-gray-500 border-t border-white/5">
-          <p>Adventurer · v5.0.2</p>
+          <p>Adventurer · v5.0.3</p>
           <p className="mt-1">
             {fr ? 'Fait avec passion entre les Alpes et l\'océan.' : 'Made with passion between the Alps and the ocean.'}
           </p>
