@@ -1542,10 +1542,14 @@ export const MAP_SPOTS: SpotItem[] = [
     lat: 43.48,
     lng: -1.56,
     sport: 'Surf',
-    description: 'Beach break emblématique',
+    description: 'Beach break emblématique. Marées fortes, fonctionne à mi-marée descendante.',
     windSpeed: 8,
     windDirection: 'S',
-    windStatus: 'Vent faible'
+    windStatus: 'Vent faible',
+    waterType: 'wave',
+    windQuality: 'gusty',
+    bestWind: ['E', 'SE'],
+    tideDependence: true,
   },
   {
     id: 12,

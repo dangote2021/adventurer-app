@@ -658,8 +658,8 @@ export default function HomePage() {
               </div>
               <p className="text-xs text-gray-400 leading-snug">
                 {language === 'fr'
-                  ? 'Achète et vends du matos vérifié entre passionnés'
-                  : 'Buy and sell verified gear between enthusiasts'}
+                  ? 'Achète et vends du matos vérifié entre pratiquants outdoor'
+                  : 'Buy and sell verified gear between outdoor practitioners'}
               </p>
               <div className="flex items-center gap-3 mt-2">
                 <span className="text-[10px] text-orange-300 font-semibold">🔥 {supabaseMarketItems.length > 0 ? (language === 'fr' ? `${supabaseMarketItems.length} articles` : `${supabaseMarketItems.length} items`) : (language === 'fr' ? '8 nouveaux articles' : '8 new items')}</span>

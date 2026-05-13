@@ -231,8 +231,8 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
               </p>
               <p className="text-xs text-gray-400 leading-relaxed">
                 {language === 'fr'
-                  ? 'Ta communauté outdoor t\'attend. Contacte des coachs, échange avec des passionnés, et trouve tes prochains partenaires d\'aventure.'
-                  : 'Your outdoor community awaits. Contact coaches, chat with enthusiasts, and find your next adventure partners.'}
+                  ? 'Ta communauté outdoor t\'attend. Contacte des coachs, échange avec d\'autres pratiquants, et trouve tes prochains partenaires de sortie.'
+                  : 'Your outdoor community awaits. Contact coaches, chat with other practitioners, and find your next outing partners.'}
               </p>
             </div>
           </div>
