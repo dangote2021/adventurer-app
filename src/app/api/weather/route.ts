@@ -136,8 +136,11 @@ export async function GET(req: Request) {
       fetched_at: new Date().toISOString(),
     });
   } catch (e) {
+    // Marc panel V8 : sanitize error — ne pas leak la stack/message de l'API externe
+    // dans la response client. Log côté serveur, renvoie un message neutre.
+    console.error('[api/weather] open-meteo error:', e instanceof Error ? e.message : String(e));
     return NextResponse.json({
-      error: e instanceof Error ? e.message : 'Erreur météo',
+      error: 'Service météo temporairement indisponible',
       status: { tone: 'neutral', label: 'Météo indisponible', detail: 'Réessaie dans quelques instants' },
     }, { status: 502 });
   }

@@ -1842,7 +1842,11 @@ export const GPX_ROUTES: GpxRoute[] = [
     difficulty: 'Intermédiaire',
     region: 'Andalousie',
     coordinates: [[36.071,-5.70],[36.073,-5.705],[36.076,-5.71],[36.079,-5.715],[36.08,-5.72]],
-    color: '#0077B6'
+    color: '#0077B6',
+    waterType: 'choppy',
+    windQuality: 'gusty',
+    bestWind: ['E', 'W'],
+    tideDependence: false,
   },
   {
     id: 8,
@@ -1854,7 +1858,11 @@ export const GPX_ROUTES: GpxRoute[] = [
     difficulty: 'Débutant',
     region: 'Andalousie',
     coordinates: [[36.012,-5.606],[36.015,-5.610],[36.018,-5.614],[36.020,-5.620]],
-    color: '#00B4D8'
+    color: '#00B4D8',
+    waterType: 'mixed',
+    windQuality: 'gusty',
+    bestWind: ['E', 'W'],
+    tideDependence: false,
   },
   {
     id: 9,

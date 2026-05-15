@@ -50,6 +50,10 @@ function AuthBridge() {
   useEffect(() => {
     if (loading) return; // Still initializing Supabase session
 
+    // Marc panel V8 : cancel guard pour éviter qu'une late resolution de
+    // getUserSports() écrase le state après un logout/changement d'user.
+    let cancelled = false;
+
     if (session && user && !isLoggedIn) {
       // Supabase session exists but Zustand doesn't know yet → sync
       const name = user.user_metadata?.name || user.email?.split('@')[0] || 'Aventurier';
@@ -100,6 +104,7 @@ function AuthBridge() {
       const wasOnboardedFlag = !!(user.user_metadata && user.user_metadata.onboarded === true);
       getUserSports(user.id)
         .then((sports) => {
+          if (cancelled) return; // logout entre-temps, ignore le résultat tardif
           if (sports.length > 0) {
             // User already onboarded on a previous session/device — keep their sports
             useStore.setState({ hasCompletedOnboarding: true, selectedSports: sports });
@@ -115,6 +120,7 @@ function AuthBridge() {
           }
         })
         .catch((err) => {
+          if (cancelled) return;
           console.warn('[AuthBridge] getUserSports failed, falling back to local state:', err?.message);
           // On error, if it's a brand new user (different email), force onboarding rather than risk skipping it
           if (isUserChange) {
@@ -129,6 +135,10 @@ function AuthBridge() {
         logout();
       }
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [session, user, loading, isLoggedIn, login, logout]);
 
   return null;

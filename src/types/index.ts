@@ -161,6 +161,14 @@ export interface GpxRoute {
   region: string;
   coordinates: [number, number][];
   color: string;
+  // S11 panel V6 (Yannick) — metadata nautique optionnelle.
+  // Pour les routes/spots nautiques, ces 4 champs aident à afficher des infos
+  // qui choisissent le spot (plan d'eau, qualité du vent, orientations qui
+  // marchent, dépendance marée). Branchés dans NauticalConditionsBlock.
+  waterType?: 'flat-lagoon' | 'choppy' | 'wave' | 'mixed';
+  windQuality?: 'stable' | 'gusty' | 'thermique';
+  bestWind?: Array<'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'>;
+  tideDependence?: boolean;
 }
 
 export interface SpotItem {

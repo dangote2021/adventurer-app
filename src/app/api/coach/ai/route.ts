@@ -143,6 +143,11 @@ Contexte historique de l'utilisateur (à utiliser pour calibrer la charge et év
 ${history_hint}` : ''}`;
 
   try {
+    // Marc panel V8 : timeout 30s sur Anthropic — sinon un slowdown LLM peut
+    // tenir 60s (timeout Vercel) avant de tomber sur le fallback. 30s laisse
+    // assez de marge pour les gros plans tout en évitant un blocage trop long.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -156,7 +161,8 @@ ${history_hint}` : ''}`;
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
       }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!r.ok) {
       const text = await r.text();

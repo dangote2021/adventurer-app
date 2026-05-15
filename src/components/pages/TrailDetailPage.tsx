@@ -237,7 +237,20 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
             Ces données existaient (fetchMarine + readMarine dans weather.ts)
             mais n'étaient pas branchées dans le widget météo.
             Pas de marées ici (S13 — API payante en attente budget). */}
-        {nautical && <NauticalConditionsBlock lat={avgLat} lng={avgLng} sport={trail.sport} language={language} />}
+        {nautical && (
+          <NauticalConditionsBlock
+            lat={avgLat}
+            lng={avgLng}
+            sport={trail.sport}
+            language={language}
+            meta={{
+              waterType: trail.waterType,
+              windQuality: trail.windQuality,
+              bestWind: trail.bestWind,
+              tideDependence: trail.tideDependence,
+            }}
+          />
+        )}
 
         {/* Profil d'altitude — gating multi-règles (panel V4 / Léa + Aïcha).
             Léa : sur sport nautique (kite/surf/wing/voile/SUP/plongée…) un D+ et
@@ -433,7 +446,16 @@ export default function TrailDetailPage({ trailId }: TrailDetailPageProps) {
 // S10 panel V6 (Yannick) — bloc conditions marines (houle, période, SST)
 // Branché sur Open-Meteo Marine API. Pas de marées ici (S13 en attente budget).
 // =============================================================================
-function NauticalConditionsBlock({ lat, lng, sport, language }: { lat: number; lng: number; sport: string; language: Language }) {
+type NauticalMeta = {
+  waterType?: 'flat-lagoon' | 'choppy' | 'wave' | 'mixed';
+  windQuality?: 'stable' | 'gusty' | 'thermique';
+  bestWind?: Array<'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'>;
+  tideDependence?: boolean;
+};
+
+function NauticalConditionsBlock({
+  lat, lng, sport, language, meta,
+}: { lat: number; lng: number; sport: string; language: Language; meta?: NauticalMeta }) {
   const [marine, setMarine] = useState<MarineForecast | null>(null);
   const [loading, setLoading] = useState(true);
   const fr = language === "fr";
@@ -502,6 +524,48 @@ function NauticalConditionsBlock({ lat, lng, sport, language }: { lat: number; l
           <p className="text-[10px] text-gray-400 mt-0.5">{fr ? "Eau" : "Water"}</p>
         </div>
       </div>
+      {/* Métadonnées spot nautique — Yannick + Marc panel V8 :
+          waterType / windQuality / bestWind / tideDependence n'étaient
+          déclarés que dans le schéma. Affichés ici quand disponibles. */}
+      {(meta?.waterType || meta?.windQuality || (meta?.bestWind && meta.bestWind.length) || meta?.tideDependence !== undefined) && (
+        <div className="grid grid-cols-2 gap-2 mb-2 mt-2">
+          {meta?.waterType && (
+            <div className="bg-white/5 rounded-lg p-2 text-xs">
+              <span className="text-gray-400">{fr ? "Plan d'eau" : "Water"}</span>{' '}
+              <span className="text-white font-medium">
+                {meta.waterType === 'flat-lagoon' ? (fr ? 'lagune flat' : 'flat lagoon')
+                  : meta.waterType === 'choppy' ? (fr ? 'clapot' : 'choppy')
+                  : meta.waterType === 'wave' ? (fr ? 'vague' : 'wave')
+                  : (fr ? 'mixte' : 'mixed')}
+              </span>
+            </div>
+          )}
+          {meta?.windQuality && (
+            <div className="bg-white/5 rounded-lg p-2 text-xs">
+              <span className="text-gray-400">{fr ? 'Vent' : 'Wind'}</span>{' '}
+              <span className="text-white font-medium">
+                {meta.windQuality === 'stable' ? (fr ? 'stable' : 'stable')
+                  : meta.windQuality === 'gusty' ? (fr ? 'rafaleux' : 'gusty')
+                  : (fr ? 'thermique' : 'thermal')}
+              </span>
+            </div>
+          )}
+          {meta?.bestWind && meta.bestWind.length > 0 && (
+            <div className="bg-white/5 rounded-lg p-2 text-xs">
+              <span className="text-gray-400">{fr ? 'Bon vent' : 'Best wind'}</span>{' '}
+              <span className="text-white font-medium">{meta.bestWind.join(' / ')}</span>
+            </div>
+          )}
+          {meta?.tideDependence !== undefined && (
+            <div className="bg-white/5 rounded-lg p-2 text-xs">
+              <span className="text-gray-400">{fr ? 'Marées' : 'Tides'}</span>{' '}
+              <span className="text-white font-medium">
+                {meta.tideDependence ? (fr ? 'dépendant' : 'tide-dependent') : (fr ? 'indépendant' : 'independent')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       <p className="text-[11px] text-gray-500 leading-relaxed mt-2">
         {status.detail}
         {fr ? " · Source : Open-Meteo Marine — recoupe avec Windguru / Surf-Forecast pour les sorties engagées."

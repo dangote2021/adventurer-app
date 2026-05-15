@@ -45,9 +45,13 @@ export default function OnboardingScreen() {
   const countByUniverse = (u: Universe) =>
     selected.filter(s => SPORTS.find(sp => sp.name === s)?.universe === u).length;
 
-  // S4 panel V6 (Léa) : sports nécessitant un encadrement professionnel — affiche
-  // une modale informative au cochage, ne bloque pas le choix mais responsabilise.
+  // S4 panel V6 (Léa) + panel V8 (Aïcha) : sports nécessitant un encadrement
+  // professionnel — affiche une modale informative au cochage, ne bloque pas le
+  // choix mais responsabilise. Parapente + Deltaplane ajoutés en V8 par cohérence
+  // avec le wording "brevet de pilote" de la modale.
   const ENGAGED_SPORTS_REQUIRING_GUIDANCE = new Set([
+    'Parapente',
+    'Deltaplane',
     'Speed riding',
     'Speed flying',
     'Wingsuit',
@@ -541,10 +545,15 @@ export default function OnboardingScreen() {
                 {language === 'fr' ? `${engagedSportWarning} : encadrement professionnel` : `${engagedSportWarning}: professional supervision`}
               </h3>
             </div>
+            <p className="text-xs text-gray-400 italic leading-relaxed">
+              {language === 'fr'
+                ? 'Tu peux toujours te renseigner ici sans t\'engager, c\'est juste un rappel utile avant la première sortie.'
+                : 'You can read this without committing to anything — just a useful reminder before a first outing.'}
+            </p>
             <p className="text-sm text-gray-300 leading-relaxed">
               {language === 'fr'
-                ? 'Ce sport présente une marge d\'erreur très réduite et des accidents graves chaque saison. Adventurer ne remplace ni un instructeur, ni un brevet de pilote, ni un encadrement professionnel.'
-                : 'This sport has a very narrow margin for error and causes serious accidents every season. Adventurer is not a substitute for an instructor, a pilot license, or professional supervision.'}
+                ? 'Ce sport demande une formation initiale en école et un encadrement local quand on découvre un nouveau site. Adventurer ne remplace ni un instructeur, ni un brevet, ni un encadrement professionnel.'
+                : 'This sport requires initial school training and local supervision when discovering a new site. Adventurer is not a substitute for an instructor, a license, or professional supervision.'}
             </p>
             <p className="text-xs text-gray-400 leading-relaxed">
               {language === 'fr'
