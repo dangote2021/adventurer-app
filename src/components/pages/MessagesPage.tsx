@@ -23,6 +23,22 @@ const translations = {
     'messages.newConvAriaLabel': 'Nouveau message',
     'messages.sendAriaLabel': 'Envoyer le message',
     'messages.notRead': '{count} non lus',
+    'messages.options': 'Options de la conversation',
+    'messages.report': 'Signaler',
+    'messages.block': 'Bloquer',
+    'messages.reportTitle': 'Signaler la conversation',
+    'messages.reportSub': 'Aide-nous à garder Adventurer sûr. Choisis un motif :',
+    'messages.reportSpam': 'Spam ou publicité',
+    'messages.reportHarass': 'Harcèlement ou insultes',
+    'messages.reportInappropriate': 'Contenu inapproprié',
+    'messages.reportScam': 'Arnaque ou fraude',
+    'messages.reportOther': 'Autre',
+    'messages.reportSent': 'Signalement envoyé. Merci, on regarde ça.',
+    'messages.blockTitle': 'Bloquer {name} ?',
+    'messages.blockSub': 'Vous ne pourrez plus vous écrire. {name} ne sera pas prévenu·e.',
+    'messages.blockConfirm': 'Bloquer',
+    'messages.blockDone': '{name} est bloqué·e.',
+    'messages.cancel': 'Annuler',
   },
   en: {
     'messages.title': 'Messages',
@@ -39,6 +55,22 @@ const translations = {
     'messages.newConvAriaLabel': 'New message',
     'messages.sendAriaLabel': 'Send message',
     'messages.notRead': '{count} unread',
+    'messages.options': 'Conversation options',
+    'messages.report': 'Report',
+    'messages.block': 'Block',
+    'messages.reportTitle': 'Report this conversation',
+    'messages.reportSub': 'Help us keep Adventurer safe. Pick a reason:',
+    'messages.reportSpam': 'Spam or advertising',
+    'messages.reportHarass': 'Harassment or abuse',
+    'messages.reportInappropriate': 'Inappropriate content',
+    'messages.reportScam': 'Scam or fraud',
+    'messages.reportOther': 'Other',
+    'messages.reportSent': 'Report sent. Thanks, we\'ll look into it.',
+    'messages.blockTitle': 'Block {name}?',
+    'messages.blockSub': 'You won\'t be able to message each other. {name} won\'t be notified.',
+    'messages.blockConfirm': 'Block',
+    'messages.blockDone': '{name} is blocked.',
+    'messages.cancel': 'Cancel',
   },
 };
 
@@ -56,7 +88,12 @@ const t = (key: string, language: string = 'fr', params?: Record<string, string>
 };
 
 export default function MessagesPage({ conversationId }: MessagesPageProps) {
-  const { closeSubPage, setSubPage, showToast, language, marketplaceThreads, activityLog } = useStore();
+  const { closeSubPage, setSubPage, showToast, language, marketplaceThreads, activityLog,
+    blockUser, isUserBlocked, reportContent } = useStore();
+  // Menu options + modales modération
+  const [showConvMenu, setShowConvMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   // B1 — Messages activity-centric : on ne montre les conversations démo
   // QUE si l'utilisateur a déjà une activité ou des threads marketplace (= contexte social réel).
   // Sinon on évite un feed de faux messages qui fait app morte au premier lancement.
@@ -125,7 +162,121 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
               {conv.isGroup && <p className="text-xs text-gray-500">{conv.groupEmoji} {t('messages.group', language)}</p>}
             </div>
           </button>
+          {/* Menu options conversation — signaler / bloquer (modération Play Store) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowConvMenu(v => !v)}
+              className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              aria-label={t('messages.options', language)}
+              aria-haspopup="true"
+              aria-expanded={showConvMenu}
+            >
+              ⋯
+            </button>
+            {showConvMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowConvMenu(false)} aria-hidden="true" />
+                <div className="absolute right-0 top-11 z-50 w-52 bg-[var(--card)] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => { setShowConvMenu(false); setShowReportModal(true); }}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/5 transition flex items-center gap-2"
+                  >
+                    🚩 {t('messages.report', language)}
+                  </button>
+                  {!conv.isGroup && (
+                    <button
+                      type="button"
+                      onClick={() => { setShowConvMenu(false); setShowBlockModal(true); }}
+                      className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition flex items-center gap-2 border-t border-white/5"
+                    >
+                      🚫 {t('messages.block', language)} {conv.participantName}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Modale de signalement */}
+        {showReportModal && (
+          <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div className="bg-[var(--card)] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-3">
+              <h3 className="text-lg font-bold text-white">{t('messages.reportTitle', language)}</h3>
+              <p className="text-sm text-gray-400">{t('messages.reportSub', language)}</p>
+              <div className="space-y-1.5 pt-1">
+                {[
+                  t('messages.reportSpam', language),
+                  t('messages.reportHarass', language),
+                  t('messages.reportInappropriate', language),
+                  t('messages.reportScam', language),
+                  t('messages.reportOther', language),
+                ].map(reason => (
+                  <button
+                    key={reason}
+                    type="button"
+                    onClick={() => {
+                      reportContent({
+                        type: 'message',
+                        targetId: conv.participantId || activeConv || 'conversation',
+                        targetLabel: conv.participantName,
+                        reason,
+                      });
+                      setShowReportModal(false);
+                      showToast(t('messages.reportSent', language), 'success', '🚩');
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-200 bg-white/5 rounded-lg hover:bg-white/10 transition"
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReportModal(false)}
+                className="w-full py-3 text-sm text-gray-400 hover:text-gray-200 transition"
+              >
+                {t('messages.cancel', language)}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modale de blocage */}
+        {showBlockModal && (
+          <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div className="bg-[var(--card)] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">🚫</div>
+                <h3 className="text-lg font-bold text-white">{t('messages.blockTitle', language, { name: conv.participantName })}</h3>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">{t('messages.blockSub', language, { name: conv.participantName })}</p>
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowBlockModal(false)}
+                  className="flex-1 py-3 rounded-xl bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
+                >
+                  {t('messages.cancel', language)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    blockUser(conv.participantId);
+                    setShowBlockModal(false);
+                    showToast(t('messages.blockDone', language, { name: conv.participantName }), 'success', '🚫');
+                    if (conversationId) closeSubPage(); else setActiveConv(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                >
+                  {t('messages.blockConfirm', language)}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
@@ -273,7 +424,7 @@ export default function MessagesPage({ conversationId }: MessagesPageProps) {
               🤝 {language === 'fr' ? 'Communauté outdoor' : 'Outdoor community'}
             </p>
             <div className="space-y-1">
-              {CONVERSATIONS.map(c => (
+              {CONVERSATIONS.filter(c => !isUserBlocked(c.participantId)).map(c => (
                 <button
                   key={c.id}
                   type="button"

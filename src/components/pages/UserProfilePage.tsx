@@ -21,12 +21,17 @@ interface Friend {
 }
 
 export default function UserProfilePage({ userId }: UserProfilePageProps) {
-  const { closeSubPage, setSubPage, showToast, language, sendFriendRequest, acceptFriend, declineFriend, removeFriend, getFriendStatus, getFriendList } = useStore();
+  const { closeSubPage, setSubPage, showToast, language, sendFriendRequest, acceptFriend, declineFriend, removeFriend, getFriendStatus, getFriendList,
+    blockUser, isUserBlocked, reportContent } = useStore();
   const [profile, setProfile] = useState<any | null>(null);
   const [friendStatus, setFriendStatus] = useState<FriendStatus>('none');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  // Menu modération profil
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   const currentLang = language as Language;
 
@@ -209,10 +214,116 @@ export default function UserProfilePage({ userId }: UserProfilePageProps) {
         >
           ←
         </button>
-        <h2 className="font-semibold text-base">
+        <h2 className="font-semibold text-base flex-1">
           {t('common.profile', currentLang)}
         </h2>
+        {/* Menu modération profil — signaler / bloquer */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowMenu(v => !v)}
+            className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            aria-label={currentLang === 'fr' ? 'Options du profil' : 'Profile options'}
+            aria-haspopup="true"
+            aria-expanded={showMenu}
+          >
+            ⋯
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} aria-hidden="true" />
+              <div className="absolute right-0 top-11 z-50 w-52 bg-[var(--card)] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                <button
+                  type="button"
+                  onClick={() => { setShowMenu(false); setShowReportModal(true); }}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-white/5 transition"
+                >
+                  🚩 {currentLang === 'fr' ? 'Signaler ce profil' : 'Report this profile'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowMenu(false); setShowBlockModal(true); }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition border-t border-white/5"
+                >
+                  🚫 {currentLang === 'fr' ? 'Bloquer' : 'Block'} {profile.name}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Modale signalement profil */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-[var(--card)] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-3">
+            <h3 className="text-lg font-bold text-white">
+              {currentLang === 'fr' ? 'Signaler ce profil' : 'Report this profile'}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {currentLang === 'fr' ? 'Aide-nous à garder Adventurer sûr. Choisis un motif :' : 'Help us keep Adventurer safe. Pick a reason:'}
+            </p>
+            <div className="space-y-1.5 pt-1">
+              {(currentLang === 'fr'
+                ? ['Faux profil ou usurpation', 'Harcèlement ou insultes', 'Contenu inapproprié', 'Spam ou arnaque', 'Autre']
+                : ['Fake profile or impersonation', 'Harassment or abuse', 'Inappropriate content', 'Spam or scam', 'Other']
+              ).map(reason => (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => {
+                    reportContent({ type: 'profile', targetId: userId, targetLabel: profile.name, reason });
+                    setShowReportModal(false);
+                    showToast(currentLang === 'fr' ? 'Signalement envoyé. Merci, on regarde ça.' : 'Report sent. Thanks, we\'ll look into it.', 'success', '🚩');
+                  }}
+                  className="w-full px-4 py-3 text-left text-sm text-gray-200 bg-white/5 rounded-lg hover:bg-white/10 transition"
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setShowReportModal(false)} className="w-full py-3 text-sm text-gray-400 hover:text-gray-200 transition">
+              {currentLang === 'fr' ? 'Annuler' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modale blocage profil */}
+      {showBlockModal && (
+        <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-[var(--card)] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">🚫</div>
+              <h3 className="text-lg font-bold text-white">
+                {currentLang === 'fr' ? `Bloquer ${profile.name} ?` : `Block ${profile.name}?`}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              {currentLang === 'fr'
+                ? `Vous ne pourrez plus vous écrire ni voir vos contenus respectifs. ${profile.name} ne sera pas prévenu·e.`
+                : `You won't be able to message each other or see each other's content. ${profile.name} won't be notified.`}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={() => setShowBlockModal(false)} className="flex-1 py-3 rounded-xl bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition">
+                {currentLang === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  blockUser(userId);
+                  setShowBlockModal(false);
+                  showToast(currentLang === 'fr' ? `${profile.name} est bloqué·e.` : `${profile.name} is blocked.`, 'success', '🚫');
+                  closeSubPage();
+                }}
+                className="flex-1 py-3 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+              >
+                {currentLang === 'fr' ? 'Bloquer' : 'Block'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cover + Avatar */}
       <div className="relative h-32 bg-gradient-to-r from-[#7c3aed]/30 to-emerald-900/30">

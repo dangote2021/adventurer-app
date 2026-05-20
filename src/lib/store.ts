@@ -137,6 +137,19 @@ interface ToastData {
 
 type FriendStatus = 'none' | 'pending-sent' | 'pending-received' | 'accepted';
 
+// Modération de contenu — exigence Play Store pour les apps avec contenu
+// communautaire (messagerie, profils, annonces). Permet de tracer les
+// signalements localement ; un futur backend pourra les remonter.
+export type ReportTargetType = 'message' | 'profile' | 'listing' | 'review';
+export interface ContentReport {
+  id: string;
+  type: ReportTargetType;
+  targetId: string;
+  targetLabel: string;
+  reason: string;
+  createdAt: string;
+}
+
 interface AppState {
   isLoggedIn: boolean;
   authMethod: 'google' | 'email' | null;
@@ -298,6 +311,13 @@ interface AppState {
   removeFriend: (userId: string) => void;
   getFriendStatus: (userId: string) => FriendStatus;
   getFriendList: () => string[];
+  // Modération — blocage + signalement (exigence Play Store pour le contenu communautaire)
+  blockedUsers: string[];
+  contentReports: ContentReport[];
+  blockUser: (userId: string) => void;
+  unblockUser: (userId: string) => void;
+  isUserBlocked: (userId: string) => boolean;
+  reportContent: (report: Omit<ContentReport, 'id' | 'createdAt'>) => void;
   setUserLocation: (lat: number, lng: number) => void;
   setGeoPermission: (perm: 'granted' | 'denied' | 'prompt') => void;
   dismissAdventure: (id: string | number) => void;
@@ -421,6 +441,8 @@ export const useStore = create<AppState>()(
       activityLog: [],
       spotGoers: {},
       friends: {},
+      blockedUsers: [],
+      contentReports: [],
       userLat: null,
       userLng: null,
       geoPermission: null,
@@ -571,6 +593,24 @@ export const useStore = create<AppState>()(
       },
       getFriendStatus: (userId) => get().friends[userId] || 'none',
       getFriendList: () => Object.entries(get().friends).filter(([_, status]) => status === 'accepted').map(([id]) => id),
+      // Modération
+      blockUser: (userId) => {
+        if (get().blockedUsers.includes(userId)) return;
+        // Bloquer = retirer aussi des amis pour cohérence
+        const friends = { ...get().friends };
+        delete friends[userId];
+        set({ blockedUsers: [...get().blockedUsers, userId], friends });
+      },
+      unblockUser: (userId) => set({ blockedUsers: get().blockedUsers.filter(id => id !== userId) }),
+      isUserBlocked: (userId) => get().blockedUsers.includes(userId),
+      reportContent: (report) => {
+        const entry: ContentReport = {
+          ...report,
+          id: 'report-' + Date.now(),
+          createdAt: new Date().toISOString(),
+        };
+        set({ contentReports: [entry, ...get().contentReports] });
+      },
       setUserLocation: (lat, lng) => set({ userLat: lat, userLng: lng }),
       setGeoPermission: (perm) => set({ geoPermission: perm }),
       dismissAdventure: (id) => set({ dismissedAdventures: [...get().dismissedAdventures, id] }),
@@ -1116,6 +1156,8 @@ export const useStore = create<AppState>()(
         activityLog: state.activityLog,
         spotGoers: state.spotGoers,
         friends: state.friends,
+        blockedUsers: state.blockedUsers,
+        contentReports: state.contentReports,
         userLat: state.userLat,
         userLng: state.userLng,
         geoPermission: state.geoPermission,

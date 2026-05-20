@@ -1066,6 +1066,31 @@ export default function ProfilePage() {
 
             {/* Danger Zone */}
             <div className="pt-4 space-y-2">
+              {/* Inviter des amis — partage de l'app avec une formule cool */}
+              <button
+                type="button"
+                className="w-full py-3 bg-[var(--accent)]/15 text-[var(--accent)] rounded-xl font-semibold hover:bg-[var(--accent)]/25 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                onClick={async () => {
+                  const shareText = language === 'fr'
+                    ? '🏔️ Je suis sur Adventurer — l\'app qui me fait ranger mon téléphone et sortir dehors. Trail, kite, grimpe, plongée, parapente… tout au même endroit. Rejoins-moi, on se trouve une sortie :'
+                    : '🏔️ I\'m on Adventurer — the app that gets me off my phone and outside. Trail, kite, climbing, diving, paragliding… all in one place. Join me, let\'s find an outing:';
+                  const shareUrl = 'https://adventurer.app';
+                  try {
+                    const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
+                    if (typeof nav.share === 'function') {
+                      await nav.share({ title: 'Adventurer', text: shareText, url: shareUrl });
+                    } else if (navigator.clipboard) {
+                      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+                      showToast(language === 'fr' ? 'Invitation copiée — colle-la où tu veux !' : 'Invite copied — paste it anywhere!', 'success', '📋');
+                    }
+                  } catch {
+                    /* l'utilisateur a annulé le partage — silencieux */
+                  }
+                }}
+                aria-label={language === 'fr' ? 'Inviter des amis sur Adventurer' : 'Invite friends to Adventurer'}
+              >
+                🤙 {language === 'fr' ? 'Inviter des amis sur Adventurer' : 'Invite friends to Adventurer'}
+              </button>
               {/* S9 panel V6 (Marc) — Bouton renvoyer la série de bienvenue
                   pour les users qui ne l'ont pas reçue (spam, mauvaise adresse). */}
               <button
