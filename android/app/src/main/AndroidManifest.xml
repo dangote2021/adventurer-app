@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -40,10 +41,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Location: spots autour de moi, Safety Check-in, tracking sortie -->
+    <!-- Location: spots à proximité + tracking GPS d'une sortie.
+         Usage PREMIER PLAN UNIQUEMENT (app ouverte). Aucune localisation en
+         arrière-plan. ACCESS_BACKGROUND_LOCATION explicitement RETIRÉE via
+         tools:node="remove" — garantit qu'elle n'apparaît pas dans le manifest
+         fusionné, même si un plugin Capacitor tente de la merger. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
+        tools:node="remove" />
 
     <!-- Camera + storage: photos de spots, carnets d'aventures -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -60,11 +66,13 @@
     <!-- Notifications: alertes météo, défis, messages -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Vibration: feedback safety alerts -->
+    <!-- Vibration: retour haptique léger (toasts, confirmations) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Empêche le téléphone de dormir pendant un Safety Check-in actif -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- WAKE_LOCK retiré : servait au Safety Check-in, feature retirée (panel #82).
+         tools:node="remove" au cas où un plugin tenterait de le re-merger. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"
+        tools:node="remove" />
 
     <!-- Capabilities (optionnels, l'app fonctionne sans) -->
     <uses-feature android:name="android.hardware.location" android:required="false" />
