@@ -982,15 +982,17 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   className="px-3 py-1.5 bg-[var(--accent)] text-white text-xs font-bold rounded-lg hover:opacity-90 transition"
-                  onClick={() => {
+                  onClick={async () => {
                     const shareText = language === 'fr'
-                      ? `Rejoins-moi sur Adventurer, l'app outdoor ! Utilise mon code ${referralCode} pour t'inscrire. https://adventurer-outdoor.vercel.app/?r=${referralCode}`
-                      : `Join me on Adventurer, the outdoor app! Use my code ${referralCode} to sign up. https://adventurer-outdoor.vercel.app/?r=${referralCode}`;
-                    if (typeof navigator !== 'undefined' && navigator.share) {
-                      navigator.share({ title: 'Adventurer', text: shareText, url: `https://adventurer-outdoor.vercel.app/?r=${referralCode}` }).catch(() => {});
-                    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                      navigator.clipboard.writeText(shareText).then(() => showToast(language === 'fr' ? 'Lien copié !' : 'Link copied!', 'success', '📋'));
-                    }
+                      ? `Rejoins-moi sur Adventurer, l'app outdoor ! Utilise mon code ${referralCode} pour t'inscrire.`
+                      : `Join me on Adventurer, the outdoor app! Use my code ${referralCode} to sign up.`;
+                    const { shareContent } = await import('@/lib/share');
+                    await shareContent({
+                      title: 'Adventurer',
+                      text: shareText,
+                      url: `https://adventurer.app/?r=${referralCode}`,
+                      onClipboard: () => showToast(language === 'fr' ? 'Lien copié !' : 'Link copied!', 'success', '📋'),
+                    });
                   }}
                 >
                   {language === 'fr' ? 'Partager' : 'Share'}
@@ -1074,18 +1076,18 @@ export default function ProfilePage() {
                   const shareText = language === 'fr'
                     ? '🏔️ Je suis sur Adventurer — l\'app qui me fait ranger mon téléphone et sortir dehors. Trail, kite, grimpe, plongée, parapente… tout au même endroit. Rejoins-moi, on se trouve une sortie :'
                     : '🏔️ I\'m on Adventurer — the app that gets me off my phone and outside. Trail, kite, climbing, diving, paragliding… all in one place. Join me, let\'s find an outing:';
-                  const shareUrl = 'https://adventurer.app';
-                  try {
-                    const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
-                    if (typeof nav.share === 'function') {
-                      await nav.share({ title: 'Adventurer', text: shareText, url: shareUrl });
-                    } else if (navigator.clipboard) {
-                      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-                      showToast(language === 'fr' ? 'Invitation copiée — colle-la où tu veux !' : 'Invite copied — paste it anywhere!', 'success', '📋');
-                    }
-                  } catch {
-                    /* l'utilisateur a annulé le partage — silencieux */
-                  }
+                  // Partage natif (@capacitor/share) → ouvre la feuille Android :
+                  // WhatsApp, SMS, Messenger, mail… Fallback web puis presse-papier.
+                  const { shareContent } = await import('@/lib/share');
+                  await shareContent({
+                    title: 'Adventurer',
+                    text: shareText,
+                    url: 'https://adventurer.app',
+                    onClipboard: () => showToast(
+                      language === 'fr' ? 'Invitation copiée — colle-la où tu veux !' : 'Invite copied — paste it anywhere!',
+                      'success', '📋',
+                    ),
+                  });
                 }}
                 aria-label={language === 'fr' ? 'Inviter des amis sur Adventurer' : 'Invite friends to Adventurer'}
               >
